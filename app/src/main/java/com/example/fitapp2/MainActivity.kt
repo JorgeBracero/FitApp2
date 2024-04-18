@@ -25,7 +25,10 @@ import com.example.fitapp2.ui.theme.FitApp2Theme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 
 class MainActivity : ComponentActivity() {
@@ -35,30 +38,30 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //PROBAR SI SE CONECTA BIEN A LA API O NO
-        val service = ApiServiceFactory.makeService()
+        //User-Agent
+        val userAgent = "Fitapp - Android - Version 1.0"
+        runBlocking {
 
-        //CORRUTINA
-        lifecycleScope.launch {
-            try {
-                val response = service.getProducts()
-                if (response.isSuccessful) {
-                    val alimentoResponse = response.body()
-                    val alimento = alimentoResponse?.alimento
-                    if(alimento != null){
-                        println("Nombre: ${alimento.descAlimento}\n" +
-                                "")
-                    }
-                } else {
-                    // Manejar errores de la API
-                    println("Error en la solicitud: ${response.code()}")
+            //PROBAR SI SE CONECTA BIEN A LA API O NO
+            val service = ApiServiceFactory.makeService()
+
+            // Hacer la solicitud GET en un hilo de trabajo en segundo plano
+            GlobalScope.launch(Dispatchers.IO) {
+                try {
+                    val response = service.getProducts()
+                    val alimento = response.alimento
+                    println("Codigo: ${alimento.idAlimento}")
+                    println("Nombre del producto: ${alimento.descAlimento}")
+                    println("Marca: ${alimento.marcaAlimento}")
+                    println("Categorias: ${alimento.catsAlimento}")
+                    println("Estado: ${alimento.estAlimento}")
+                    println("Imagen: ${alimento.imgAlimento}")
+                    println("Calorias: ${alimento.calAlimento}")
+                } catch (e: Exception) {
+                    println("Error al obtener el producto: ${e.message}")
                 }
-            } catch (e: Exception) {
-                // Manejar errores de red o de la aplicación
-                e.printStackTrace()
-            }
+            }.join() // Esperar a que la solicitud termine para que main() no termine antes
         }
-
 
         /*
         // Registrar el ActivityResultLauncher
@@ -73,7 +76,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    //Navigation()
+                    Navigation()
                     //Main(this@MainActivity,signInLauncher)
                 }
             }
