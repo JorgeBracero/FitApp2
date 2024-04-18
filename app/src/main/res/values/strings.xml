@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">FitApp</string>
+    <string name="btLog">Inicia sesion con Google</string>
+    <string name="btInvitado">Entrar como Invitado</string>
+    <string name="ckTerminos">Acepto los Terminos del servicio y Politica \nde privacidad</string>
+    <string name="titTerminos">Terminos del servicio y Politica de privacidad</string>
+    <string name="msgTerminos">Lorem ipsum</string>
+    <string name="txtPrincipal">Principal</string>
+    <string name="titPanelInvitado">Información para el invitado</string>
+    <string name="msgPanelInvitado">Si se loguea como invitado, debe saber que al cerrar la aplicación,
+        sus datos y los cambios realizados no se quedarán guardados. Al ser un invitado entra como un usuario de prueba.</string>
+    <string name="btPanelInvitado">Aceptar</string>
+    <string name="txtIdiomas">Idiomas</string>
+    <string name="txtEspañol">Español</string>
+    <string name="txtIngles">Ingles</string>
+    <string name="txtFrances">Frances</string>
+    <string name="txtDesayuno">Desayuno</string>
+    <string name="txtAlmuerzo">Almuerzo</string>
+    <string name="txtCena">Cena</string>
+    <string name="txtEdFoto">Editar foto</string>
+    <string name="txtPerfil">Perfil</string>
+    <string name="txtInformes">Informes</string>
+    <string name="txtPeso">Mi peso</string>
+    <string name="txtConfiguracion">Configuracion</string>
+    <string name="txtCaloriasCon">Calorias Consumidas</string>
+    <string name="txtCaloriasRes">Calorias Restantes</string>
+    <string name ="default_web_client_id">597429433041-0mn2upsebugesl47cupi2kpcpo0eplg0.apps.googleusercontent.com</string>
+</resources>

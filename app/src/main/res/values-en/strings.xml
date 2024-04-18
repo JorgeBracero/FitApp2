@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">FitApp</string>
+    <string name="btLog">Sign in with Google</string>
+    <string name="btInvitado">Log in as a Guest</string>
+    <string name="ckTerminos">I agree to the Terms of Service and Privacy Policy</string>
+    <string name="titTerminos">Terms of Service and Privacy Policy</string>
+    <string name="msgTerminos">Lorem ipsum</string>
+    <string name="txtPrincipal">Main</string>
+    <string name="titPanelInvitado">Guest Information</string>
+    <string name="msgPanelInvitado">If you log in as a guest, you should know that when you close the app,
+        your data and the changes you make will not be saved. As a guest, you log in as a test user.</string>
+    <string name="btPanelInvitado">Ok</string>
+    <string name="txtIdiomas">Languages</string>
+    <string name="txtEspañol">Spanish</string>
+    <string name="txtIngles">English</string>
+    <string name="txtFrances">French</string>
+    <string name="txtDesayuno">Breakfast</string>
+    <string name="txtAlmuerzo">Lunch</string>
+    <string name="txtCena">Dinner</string>
+    <string name="txtEdFoto">Edit photo</string>
+    <string name="txtPerfil">Profile</string>
+    <string name="txtInformes">Reports</string>
+    <string name="txtPeso">My weight</string>
+    <string name="txtConfiguracion">Settings</string>
+    <string name="txtCaloriasCon">Calories Consumed</string>
+    <string name="txtCaloriasRes">Remaining Calories</string>
+    <string name ="default_web_client_id">597429433041-0mn2upsebugesl47cupi2kpcpo0eplg0.apps.googleusercontent.com</string>
+</resources>
