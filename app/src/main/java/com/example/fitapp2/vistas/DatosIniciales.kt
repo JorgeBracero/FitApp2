@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import com.example.fitapp2.R
 import com.example.fitapp2.modelos.Rutas
 
+
 @Composable
 fun DatosInicialesScreen(navController: NavController, usuario: String){
     var pesoTexto by rememberSaveable { mutableStateOf("") }
@@ -81,7 +82,7 @@ fun DatosInicialesScreen(navController: NavController, usuario: String){
                     val pesoUser = pesoTexto.toFloat()
                     val alturaUser = alturaTexto.toFloat()
 
-                    if(pesoUser > 0 && pesoUser < 400 && alturaUser > 0 && alturaUser < 3 && !nombreUsuario.trim().isEmpty()){
+                    if(pesoUser > 0 && pesoUser < 400 && alturaUser > 0 && alturaUser < 3 && nombreUsuario.trim().isNotEmpty()){
                         navController.navigate(Rutas.PrincipalScreen.ruta + "/$pesoUser/$alturaUser/$nombreUsuario") //Navega a la pantalla principal
                     }else{
                         Toast.makeText(context, "Peso, altura o nombre incorrectos",Toast.LENGTH_SHORT).show()

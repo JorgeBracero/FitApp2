@@ -43,7 +43,7 @@ import com.example.fitapp2.modelos.Rutas
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrincipalScreen(navController: NavController, peso: Float, altura: Float, nombre: String){
+fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, nombre: String?){
     val context = LocalContext.current
     Scaffold(
         topBar = {
@@ -92,7 +92,7 @@ fun PrincipalScreen(navController: NavController, peso: Float, altura: Float, no
                                 modifier = Modifier.size(45.dp)
                                     .clickable {
                                         //Navega a la pantalla principal
-                                        navController.navigate(route = Rutas.PerfilScreen.ruta)
+                                        navController.navigate(route = Rutas.PerfilScreen.ruta + "/$peso/$altura/$nombre")
                                     }
                             )
                             Text(text = context.getString(R.string.txtPerfil))
@@ -103,7 +103,8 @@ fun PrincipalScreen(navController: NavController, peso: Float, altura: Float, no
                             Icon(
                                 imageVector = Icons.Default.Home,
                                 contentDescription = "Inicio",
-                                tint = Color.White
+                                tint = Color.White,
+                                modifier = Modifier.size(45.dp)
                             )
                             Text(text = "Inicio")
                         }
@@ -115,6 +116,8 @@ fun PrincipalScreen(navController: NavController, peso: Float, altura: Float, no
                                 contentDescription = "Informes",
                                 tint = Color.White,
                                 modifier = Modifier.size(45.dp)
+
+                                //Navega a Informes
                             )
                             Text(text = context.getString(R.string.txtInformes))
                         }
@@ -126,6 +129,8 @@ fun PrincipalScreen(navController: NavController, peso: Float, altura: Float, no
                                 contentDescription = "Album",
                                 tint = Color.White,
                                 modifier = Modifier.size(45.dp)
+
+                                //Navega al album de fotos
                             )
                             Text(text = "Album")
                         }
@@ -150,12 +155,16 @@ fun PrincipalScreen(navController: NavController, peso: Float, altura: Float, no
             TarjetaDia(context.getString(R.string.txtAlmuerzo), R.drawable.almuerzo)
             TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena)
             Spacer(modifier = Modifier.height(20.dp))
-            Text(text = "Usuario: $nombre")
-            Text(text = "Peso: $peso kg")
-            Text(text = "Altura: $altura m")
+
+            if(peso != null && altura != null && nombre != null){
+                Text(text = "Usuario: $nombre")
+                Text(text = "Peso: $peso kg")
+                Text(text = "Altura: $altura m")
+            }
         }
     }
 }
+
 
 @Composable
 fun TarjetaDia(texto: String, idImg: Int){

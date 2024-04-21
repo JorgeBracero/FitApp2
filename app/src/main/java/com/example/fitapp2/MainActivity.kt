@@ -1,34 +1,26 @@
 package com.example.fitapp2
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
+
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
 import com.example.fitapp2.apiService.ApiServiceFactory
+import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.Navigation
 import com.example.fitapp2.ui.theme.FitApp2Theme
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 
 class MainActivity : ComponentActivity() {
@@ -37,31 +29,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        //User-Agent
-        val userAgent = "Fitapp - Android - Version 1.0"
-        runBlocking {
-
-            //PROBAR SI SE CONECTA BIEN A LA API O NO
-            val service = ApiServiceFactory.makeService()
-
-            // Hacer la solicitud GET en un hilo de trabajo en segundo plano
-            GlobalScope.launch(Dispatchers.IO) {
-                try {
-                    val response = service.getProducts()
-                    val alimento = response.alimento
-                    println("Codigo: ${alimento.idAlimento}")
-                    println("Nombre del producto: ${alimento.descAlimento}")
-                    println("Marca: ${alimento.marcaAlimento}")
-                    println("Categorias: ${alimento.catsAlimento}")
-                    println("Estado: ${alimento.estAlimento}")
-                    println("Imagen: ${alimento.imgAlimento}")
-                    println("Calorias: ${alimento.calAlimento}")
-                } catch (e: Exception) {
-                    println("Error al obtener el producto: ${e.message}")
-                }
-            }.join() // Esperar a que la solicitud termine para que main() no termine antes
-        }
 
         /*
         // Registrar el ActivityResultLauncher
@@ -76,24 +43,31 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Navigation()
-                    //Main(this@MainActivity,signInLauncher)
+                    // Declarar MutableState para almacenar el estado del alimento
+                    var alimentoState by rememberSaveable { mutableStateOf<Alimento?>(null) }
+
+                    LaunchedEffect(Unit) {
+                        lifecycleScope.launch {
+                            try {
+                                val service = ApiServiceFactory.makeService()
+                                val response = service.getProducts()
+                                // Actualizar el estado del alimento cuando se reciba la respuesta de la API
+                                alimentoState = response.alimento
+                                println("AlimentoLifeCycle: ${alimentoState}")
+                            } catch (e: Exception) {
+                                println("Error al obtener el producto: ${e.message}")
+                            }
+                        }
+                    }
+
+                    // Observar el estado del alimento y mostrar la vista correspondiente
+                    alimentoState?.let { alimento ->
+                        Navigation(alimento)
+                    }
                 }
             }
         }
     }
 }
 
-/*
-@Composable
-fun Main(activity: Activity,signInLauncher: ActivityResultLauncher<Intent>?) {
-    Button(
-        onClick = {
-            val googleSignInClient = GoogleSignIn.getClient(activity, GoogleSignInOptions.DEFAULT_SIGN_IN)
-            signInLauncher?.launch(googleSignInClient.signInIntent)
-        }
-    ) {
-        Text(text = "Iniciar sesión con Google")
-    }
-}*/
 

@@ -51,7 +51,7 @@ import com.example.fitapp2.modelos.Rutas
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PerfilScreen(navController: NavController){
+fun PerfilScreen(navController: NavController, peso: Float?, altura: Float?, nombre: String?){
     val context = LocalContext.current
     var fotoPerfil = Icons.Default.AccountCircle
     Scaffold(
@@ -188,19 +188,25 @@ fun PerfilScreen(navController: NavController){
                     }
             }
 
-            TarjetaPersonal(context)
+
+            TarjetaPersonal(context.getString(R.string.txtPeso),navController,peso, altura, nombre)
+            Spacer(Modifier.height(10.dp))
+            TarjetaPersonal("Informacion personal", navController,peso, altura, nombre)
         }
     }
 }
 
+
 @Composable
-fun TarjetaPersonal(context: Context){
+fun TarjetaPersonal(titulo: String,navController: NavController, peso: Float?, altura: Float?, nombre: String?){
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .clickable {
-
+                if(titulo.equals("Informacion personal")){
+                    navController.navigate(Rutas.InfoPersonalScreen.ruta + "/$peso/$altura/$nombre")
+                }
             },
         colors = CardDefaults.cardColors(
             containerColor = Color.DarkGray,
@@ -222,15 +228,24 @@ fun TarjetaPersonal(context: Context){
                 ),
                 shape = RoundedCornerShape(20.dp)
             ){
-                Image(
-                    painter = painterResource(id = R.drawable.peso),
-                    contentDescription = null,
-                    modifier = Modifier.size(50.dp)
-                )
+                if(titulo.equals("Informacion personal")){
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "",
+                        tint = Color.White,
+                        modifier = Modifier.size(50.dp)
+                    )
+                }else{
+                    Image(
+                        painter = painterResource(id = R.drawable.peso),
+                        contentDescription = null,
+                        modifier = Modifier.size(50.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = context.getString(R.string.txtPeso),
+                text = titulo,
                 color = Color.White
             )
             Spacer(modifier = Modifier.width(50.dp))
@@ -240,6 +255,5 @@ fun TarjetaPersonal(context: Context){
                 tint = Color.White
             )
         }
-
     }
 }
