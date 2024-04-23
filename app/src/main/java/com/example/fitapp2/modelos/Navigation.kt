@@ -16,7 +16,7 @@ import com.example.fitapp2.vistas.PrincipalScreen
 
 //Gestor de navegacion entre las pantallas de la app
 @Composable
-fun Navigation(alimento: Alimento?){
+fun Navigation(alimentos: List<Alimento?>){
     val navController = rememberNavController()
     NavHost(
         navController = navController,
@@ -63,7 +63,7 @@ fun Navigation(alimento: Alimento?){
 
         //BUSCAR
         composable(route = Rutas.BuscarScreen.ruta){
-            BuscarScreen(navController,alimento)
+            BuscarScreen(navController,alimentos)
         }
 
         //DATOS PERSONALES

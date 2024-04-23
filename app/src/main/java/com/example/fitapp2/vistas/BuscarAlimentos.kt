@@ -57,16 +57,8 @@ import kotlinx.coroutines.runBlocking
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BuscarScreen(navController: NavController, alimento: Alimento?){
+fun BuscarScreen(navController: NavController, alimentos: List<Alimento?>){
     var text by rememberSaveable { mutableStateOf("") }
-
-    //Sacamos este producto de ejemplo
-    var alimentos = listOf(alimento)
-    println(alimentos)
-
-    //User-Agent
-    //val userAgent = "Fitapp - Android - Version 1.0"
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -115,14 +107,19 @@ fun BuscarScreen(navController: NavController, alimento: Alimento?){
         }
         Spacer(modifier = Modifier.height(20.dp))
 
-        //RecyclerView
-        LazyColumn(
-            modifier = Modifier.background(color = Color.White)
-                .padding(10.dp)
-        ){
-            items(items = alimentos) { alimento ->
-                CardALimento(alimento) //Creamos un card para cada uno
+        if(alimentos != null && alimentos.size > 0) {
+            //RecyclerView
+            LazyColumn(
+                modifier = Modifier.background(color = Color.White)
+                    .padding(10.dp)
+            ) {
+                //Cargamos el recyclerview con la lista de panes
+                items(items = alimentos) { alimento ->
+                    CardALimento(alimento) //Creamos un card para cada uno
+                }
             }
+        }else{
+            Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
         }
     }
 }
@@ -137,12 +134,12 @@ fun CardALimento(alimento: Alimento?){
             contentColor = Color.White
         ),
         shape = RoundedCornerShape(8.dp)
-    ){
+    ) {
         Column(
             modifier = Modifier.padding(10.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
-        ){
+        ) {
             //Imagen del alimento
             ImgAlimento(url = alimento!!.imgAlimento) //Imagen del alimento
             Text(text = alimento!!.descAlimento) //Nombre del alimento
