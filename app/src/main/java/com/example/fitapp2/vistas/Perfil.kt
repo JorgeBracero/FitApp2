@@ -120,7 +120,7 @@ fun PerfilScreen(navController: NavController, peso: Float?, altura: Float?, nom
                                 modifier = Modifier.size(45.dp)
                                     .clickable {
                                         //Navega a la pantalla principal
-                                        navController.navigate(route = Rutas.PrincipalScreen.ruta)
+                                        navController.navigate(route = Rutas.PrincipalScreen.ruta + "/10/1/nombre")
                                     }
                             )
                             Text(text = "Inicio")

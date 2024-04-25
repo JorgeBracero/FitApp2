@@ -36,65 +36,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Encabezado para las peticiones GET
-                    val userAgent = "com.example.fitapp2 - Android - Version 1.0"
-
-                    // Declarar MutableState para almacenar el estado del alimento
-                    val alimentosState = remember { mutableStateOf<List<Alimento?>>(emptyList()) }
-
-                    //Términos de búsqueda
-                    val query = "pan"
-                    val size = 3
-
-                    LaunchedEffect(Unit) {
-                        lifecycleScope.launch {
-                            try {
-                                val service = ApiServiceFactory.makeService()
-                                println("Service: $service")
-                                val response = service.getProducts(query, size, userAgent) //Recogemos el doc html
-                                println("Response: $response")
-                                val html = response.string()
-                                println("HTML: $html")
-                                val listaCodigos = extractBarcodesFromHtml(html) //Recogemos el codigo de cada producto
-                                println("Codigos: $listaCodigos")
-
-                                //Una vez tenemos los codigos de barras de cada producto procesado
-                                //Extraemos el alimento de cada uno con sus detalles definidos en su JSON
-                                val alimentosTemp = mutableListOf<Alimento?>()
-                                listaCodigos.forEach { codigo ->
-                                    val alimento =
-                                        service.getDetailsProduct(codigo, userAgent).alimento //Extraemos el alimento
-                                    //que corresponde con ese codigo de barras, y lo añadimos a la lista
-                                    alimentosTemp.add(alimento)
-                                }
-
-                                println("AlimentosLifeCycle: ${alimentosTemp.size}")
-
-                                // Actualizar la lista de alimentos después de obtener todos los detalles
-                                alimentosState.value = alimentosTemp
-                            } catch (e: Exception) {
-                                println("Error al obtener los productos: ${e.message}")
-                            }
-                        }
-                    }
-
-                    // Pasamos por parametro el estado de la lista de alimentos
-                    Navigation(alimentosState.value)
+                    Navigation()
                 }
             }
         }
     }
-}
-
-private fun extractBarcodesFromHtml(html: String): List<String> {
-    val barcodes = mutableListOf<String>()
-    val document = Jsoup.parse(html)
-    val elements = document.select("div[id=search_results] ul[class=products] li a")
-    for (element in elements) {
-        val barcode = element.attr("href").split("/")[2]
-        barcode?.let { barcodes.add(it) }
-    }
-    return barcodes
 }
 
 

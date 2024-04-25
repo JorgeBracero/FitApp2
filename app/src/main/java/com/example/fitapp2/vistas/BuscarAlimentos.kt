@@ -33,6 +33,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -42,7 +43,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import coil.transform.CircleCropTransformation
@@ -50,15 +54,26 @@ import com.example.fitapp2.R
 import com.example.fitapp2.apiService.ApiServiceFactory
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.Rutas
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import org.jsoup.Jsoup
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BuscarScreen(navController: NavController, alimentos: List<Alimento?>){
-    var text by rememberSaveable { mutableStateOf("") }
+fun BuscarScreen(navController: NavController){
+    var query by rememberSaveable { mutableStateOf("") }
+    var alimentos by remember { mutableStateOf<List<Alimento?>>(emptyList()) }
+
+    //Términos de búsqueda
+    val size = 3
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -72,11 +87,15 @@ fun BuscarScreen(navController: NavController, alimentos: List<Alimento?>){
         ) {
             var showClear by rememberSaveable { mutableStateOf(false) }
             OutlinedTextField(
-                value = text,
+                value = query,
                 onValueChange = {
-                    text = it
+                    query = it
                     showClear = it.trim().isNotEmpty()
+                    if(showClear == false){
+                        alimentos = emptyList()
+                    }
                 },
+                shape = RoundedCornerShape(8.dp),
                 label = { Text(text = "Alimentos") },
                 colors = TextFieldDefaults.textFieldColors(
                     containerColor = Color.White,
@@ -97,8 +116,9 @@ fun BuscarScreen(navController: NavController, alimentos: List<Alimento?>){
                             contentDescription = "Limpiar busqueda",
                             tint = Color.Black,
                             modifier = Modifier.clickable {
-                                text = ""
+                                query = ""
                                 showClear = false //Si limpia el texto lo volvemos a ocultar
+                                alimentos = emptyList()
                             }
                         )
                     }
@@ -107,13 +127,23 @@ fun BuscarScreen(navController: NavController, alimentos: List<Alimento?>){
         }
         Spacer(modifier = Modifier.height(20.dp))
 
-        if(alimentos != null && alimentos.size > 0) {
+        //Codigo para la busqueda en tiempo real, cada vezx que se actualice la query, realiza la llamada
+        //A la Api
+        // Llamar a apiCall solo cuando cambia la query
+        LaunchedEffect(query) {
+            if (query.isNotBlank()) {
+                alimentos = apiCall(query = query, size = size)
+            }
+        }
+
+        if(alimentos.isNotEmpty()) {
             //RecyclerView
             LazyColumn(
-                modifier = Modifier.background(color = Color.White)
-                    .padding(10.dp)
+                modifier = Modifier
+                    .background(color = Color.White)
+                    .padding(15.dp)
             ) {
-                //Cargamos el recyclerview con la lista de panes
+                //Cargamos el recyclerview con la lista de alimentos
                 items(items = alimentos) { alimento ->
                     CardALimento(alimento) //Creamos un card para cada uno
                 }
@@ -124,26 +154,84 @@ fun BuscarScreen(navController: NavController, alimentos: List<Alimento?>){
     }
 }
 
+//Llamada a la Api, devuelve la lista de alimentos
+suspend fun apiCall(query: String, size: Int): List<Alimento?> {
+    val userAgent = "com.example.fitapp2 - Android - Version 1.0"
+    val alimentosTemp = mutableListOf<Alimento?>()
+
+    if (query.isBlank()) {
+        // Si la consulta está en blanco, devuelve una lista vacía
+        return alimentosTemp
+    }
+
+    try {
+        withContext(Dispatchers.IO) {
+            val service = ApiServiceFactory.makeService()
+            val response = service.getProducts(query, size, userAgent)
+            val html = response.string()
+            val listaCodigos = extractBarcodesFromHtml(html)
+
+            // Realiza las llamadas de manera concurrente para obtener detalles de productos
+            val deferredAlimentos = listaCodigos.map { codigo ->
+                async {
+                    val alimento = service.getDetailsProduct(codigo, userAgent).alimento
+                    alimento
+                }
+            }
+
+            // Espera a que todas las llamadas asíncronas se completen y recopila los resultados
+            alimentosTemp.addAll(deferredAlimentos.awaitAll())
+            println("Alimentos Buscados: $alimentosTemp")
+        }
+    } catch (e: Exception) {
+        println("Error al obtener los productos: ${e.message}")
+    }
+
+    return alimentosTemp
+}
+
+private fun extractBarcodesFromHtml(html: String): List<String> {
+    val barcodes = mutableListOf<String>()
+    val document = Jsoup.parse(html)
+    val elements = document.select("div[id=search_results] ul[class=products] li a")
+    for (element in elements) {
+        val barcode = element.attr("href").split("/")[2]
+        barcode?.let { barcodes.add(it) }
+    }
+    return barcodes
+}
+
 
 //Vista del alimento extraido
 @Composable
 fun CardALimento(alimento: Alimento?){
     Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .size(200.dp)
+            .padding(15.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.Cyan,
+            containerColor = Color.DarkGray,
             contentColor = Color.White
         ),
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             //Imagen del alimento
-            ImgAlimento(url = alimento!!.imgAlimento) //Imagen del alimento
-            Text(text = alimento!!.descAlimento) //Nombre del alimento
-            Text(text = alimento.marcaAlimento) //Marca del alimento
+            if(alimento != null) {
+                ImgAlimento(url = alimento.imgAlimento) //Imagen del alimento
+                Text(
+                    text = alimento.descAlimento,
+                    fontSize = TextUnit(25f, TextUnitType.Sp)
+                ) //Nombre del alimento
+                Text(
+                    text = alimento.marcaAlimento,
+                    fontSize = TextUnit(25f, TextUnitType.Sp)
+                ) //Marca del alimento
+            }
         }
     }
 }
@@ -163,6 +251,6 @@ fun ImgAlimento(url: String){
     Image(
         painter = painter,
         contentDescription = "",
-        modifier = Modifier.size(70.dp)
+        modifier = Modifier.size(120.dp)
     )
 }
