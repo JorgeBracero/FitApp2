@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -55,6 +56,7 @@ import com.example.fitapp2.apiService.ApiServiceFactory
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.Rutas
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -70,6 +72,7 @@ import org.jsoup.Jsoup
 fun BuscarScreen(navController: NavController){
     var query by rememberSaveable { mutableStateOf("") }
     var alimentos by remember { mutableStateOf<List<Alimento?>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) } // Variable para controlar el estado de carga
 
     //Términos de búsqueda
     val size = 3
@@ -127,45 +130,53 @@ fun BuscarScreen(navController: NavController){
         }
         Spacer(modifier = Modifier.height(20.dp))
 
-        //Codigo para la busqueda en tiempo real, cada vezx que se actualice la query, realiza la llamada
-        //A la Api
-        // Llamar a apiCall solo cuando cambia la query
+        // Llamada a la Api
         LaunchedEffect(query) {
             if (query.isNotBlank()) {
-                alimentos = apiCall(query = query, size = size)
+                isLoading = true // Mostrar indicador de carga
+                val deferredAlimentos = apiCall(query = query, size = size)
+                val alimentosResult = deferredAlimentos.await() // Espera a que se complete el Deferred y obtiene el resultado
+                alimentos = alimentosResult
+                isLoading = false // Ocultar indicador de carga
             }
         }
 
-        if(alimentos.isNotEmpty()) {
-            //RecyclerView
-            LazyColumn(
-                modifier = Modifier
-                    .background(color = Color.White)
-                    .padding(15.dp)
-            ) {
-                //Cargamos el recyclerview con la lista de alimentos
-                items(items = alimentos) { alimento ->
-                    CardALimento(alimento) //Creamos un card para cada uno
-                }
-            }
+
+        //Pantalla
+        if(isLoading){
+            CircularProgressIndicator(modifier = Modifier.size(50.dp))
         }else{
-            Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
+            if (alimentos.isNotEmpty()) {
+                //RecyclerView
+                LazyColumn(
+                    modifier = Modifier
+                        .background(color = Color.White)
+                        .padding(15.dp)
+                ) {
+                    //Cargamos el recyclerview con la lista de alimentos
+                    items(items = alimentos) { alimento ->
+                        CardALimento(alimento) //Creamos un card para cada uno
+                    }
+                }
+            }else{
+                Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
+            }
         }
     }
 }
 
-//Llamada a la Api, devuelve la lista de alimentos
-suspend fun apiCall(query: String, size: Int): List<Alimento?> {
-    val userAgent = "com.example.fitapp2 - Android - Version 1.0"
-    val alimentosTemp = mutableListOf<Alimento?>()
+// Llamada a la Api, devuelve la lista de alimentos como un Deferred
+fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
+    return CoroutineScope(Dispatchers.IO).async {
+        val userAgent = "com.example.fitapp2 - Android - Version 1.0"
+        val alimentosTemp = mutableListOf<Alimento?>()
 
-    if (query.isBlank()) {
-        // Si la consulta está en blanco, devuelve una lista vacía
-        return alimentosTemp
-    }
+        if (query.isBlank()) {
+            // Si la consulta está en blanco, devuelve una lista vacía
+            return@async alimentosTemp
+        }
 
-    try {
-        withContext(Dispatchers.IO) {
+        try {
             val service = ApiServiceFactory.makeService()
             val response = service.getProducts(query, size, userAgent)
             val html = response.string()
@@ -182,12 +193,12 @@ suspend fun apiCall(query: String, size: Int): List<Alimento?> {
             // Espera a que todas las llamadas asíncronas se completen y recopila los resultados
             alimentosTemp.addAll(deferredAlimentos.awaitAll())
             println("Alimentos Buscados: $alimentosTemp")
+        } catch (e: Exception) {
+            println("Error al obtener los productos: ${e.message}")
         }
-    } catch (e: Exception) {
-        println("Error al obtener los productos: ${e.message}")
-    }
 
-    return alimentosTemp
+        return@async alimentosTemp
+    }
 }
 
 private fun extractBarcodesFromHtml(html: String): List<String> {
