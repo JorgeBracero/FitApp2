@@ -13,10 +13,11 @@ import com.example.fitapp2.vistas.InfoPersonalScreen
 import com.example.fitapp2.vistas.LoginScreen
 import com.example.fitapp2.vistas.PerfilScreen
 import com.example.fitapp2.vistas.PrincipalScreen
+import com.google.firebase.database.DatabaseReference
 
 //Gestor de navegacion entre las pantallas de la app
 @Composable
-fun Navigation(){
+fun Navigation(refAlimentos: DatabaseReference, refRegAl: DatabaseReference){
     val navController = rememberNavController()
     NavHost(
         navController = navController,
@@ -62,8 +63,12 @@ fun Navigation(){
         }
 
         //BUSCAR
-        composable(route = Rutas.BuscarScreen.ruta){
-            BuscarScreen(navController)
+        composable(route = Rutas.BuscarScreen.ruta + "/{momentoDia}",
+            arguments = listOf(navArgument(name = "momentoDia") {
+                type = NavType.StringType
+            })){
+            it.arguments?.let { it1 -> BuscarScreen(navController,
+                it1.getString("momentoDia", ""),refAlimentos,refRegAl) }
         }
 
         //DATOS PERSONALES

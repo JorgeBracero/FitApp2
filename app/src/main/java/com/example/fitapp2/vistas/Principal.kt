@@ -70,7 +70,7 @@ fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, 
                         contentDescription = "Busqueda",
                         tint = Color.White,
                         modifier = Modifier.clickable {
-                            navController.navigate(Rutas.BuscarScreen.ruta) //Navega para alla
+
                         }
                     )
                 }
@@ -151,9 +151,9 @@ fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, 
             Text(text = context.getString(R.string.txtCaloriasRes) + "\t\t\t0")
             Text(text = context.getString(R.string.txtCaloriasCon) + "\t\t\t0")
             Spacer(modifier = Modifier.height(10.dp))
-            TarjetaDia(context.getString(R.string.txtDesayuno), R.drawable.desayuno)
-            TarjetaDia(context.getString(R.string.txtAlmuerzo), R.drawable.almuerzo)
-            TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena)
+            TarjetaDia(context.getString(R.string.txtDesayuno), R.drawable.desayuno,navController)
+            TarjetaDia(context.getString(R.string.txtAlmuerzo), R.drawable.almuerzo,navController)
+            TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena,navController)
             Spacer(modifier = Modifier.height(20.dp))
 
             if(peso != null && altura != null && nombre != null){
@@ -167,12 +167,13 @@ fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, 
 
 
 @Composable
-fun TarjetaDia(texto: String, idImg: Int){
+fun TarjetaDia(texto: String, idImg: Int,navController: NavController){
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .clickable {
+                //Iriamos a la pantalla para modificar los alimentos o consultarlos de ese dia
 
             },
         colors = CardDefaults.cardColors(
@@ -207,6 +208,11 @@ fun TarjetaDia(texto: String, idImg: Int){
                     contentDescription = "Añadir",
                     tint = Color.Cyan,
                     modifier = Modifier.size(40.dp)
+                        .clickable {
+                            //Navegamos a la pantalla BuscarScreen, dependiendo del momento del dia
+                            //Identificamos el momento del dia pasandole un parametro
+                            navController.navigate(Rutas.BuscarScreen.ruta + "/$texto")
+                        }
                 )
             }
         }

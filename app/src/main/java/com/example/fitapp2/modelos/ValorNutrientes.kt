@@ -9,4 +9,7 @@ data class ValorNutrientes(
     @SerializedName("salt") val sal: Double,
     @SerializedName("sodium") val sodio: Double,
     @SerializedName("sugars") val azucar: Double
-)
+){
+    //Constructor firebase
+    constructor() : this(3.0, 3.0,3.0,3.0,3.0,3.0)
+}
