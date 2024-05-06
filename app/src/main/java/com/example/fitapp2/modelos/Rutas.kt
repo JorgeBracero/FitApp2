@@ -7,4 +7,6 @@ sealed class Rutas(val ruta: String) {
     object DatosInicialesScreen: Rutas("DatosInicialesScreen")
     object BuscarScreen: Rutas("BuscarScreen")
     object InfoPersonalScreen: Rutas("InfoPersonalScreen")
+    object DetallesScreen: Rutas("DetallesScreen")
+    object AlimentosConsumidosScreen: Rutas("AlimentosConsumidosScreen")
 }

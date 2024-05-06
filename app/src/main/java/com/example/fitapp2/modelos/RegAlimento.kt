@@ -5,4 +5,7 @@ data class RegAlimento(
     val idAlimento: String,
     val momentoDia: String,
     val cantidad: Int
-)
+){
+    //Constructor sin argumentos necesario para Firebase
+    constructor(): this("","",1)
+}

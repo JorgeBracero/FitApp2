@@ -1,6 +1,7 @@
 package com.example.fitapp2.modelos
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serializable
 
 data class Alimento(
     @SerializedName("code") val idAlimento: String,
@@ -10,7 +11,7 @@ data class Alimento(
     @SerializedName("nutriments") val nutrientes: ValorNutrientes,
     @SerializedName("ingredients") val ingredientes: List<Ingrediente>,
     @SerializedName("image_front_url") var imgAlimento: String
-){
+): Serializable {
     // Constructor sin argumentos requerido por Firebase Realtime Database
     constructor() : this("", "", "", "", ValorNutrientes(), listOf(Ingrediente()), "")
 }

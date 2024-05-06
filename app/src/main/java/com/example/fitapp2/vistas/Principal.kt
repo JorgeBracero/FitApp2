@@ -167,14 +167,14 @@ fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, 
 
 
 @Composable
-fun TarjetaDia(texto: String, idImg: Int,navController: NavController){
+fun TarjetaDia(momentoDia: String, idImg: Int,navController: NavController){
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .clickable {
                 //Iriamos a la pantalla para modificar los alimentos o consultarlos de ese dia
-
+                navController.navigate(Rutas.AlimentosConsumidosScreen.ruta + "/$momentoDia")
             },
         colors = CardDefaults.cardColors(
             containerColor = Color.DarkGray,
@@ -196,7 +196,7 @@ fun TarjetaDia(texto: String, idImg: Int,navController: NavController){
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = texto,
+                text = momentoDia,
                 color = Color.White
             )
             Row(
@@ -211,7 +211,7 @@ fun TarjetaDia(texto: String, idImg: Int,navController: NavController){
                         .clickable {
                             //Navegamos a la pantalla BuscarScreen, dependiendo del momento del dia
                             //Identificamos el momento del dia pasandole un parametro
-                            navController.navigate(Rutas.BuscarScreen.ruta + "/$texto")
+                            navController.navigate(Rutas.BuscarScreen.ruta + "/$momentoDia")
                         }
                 )
             }

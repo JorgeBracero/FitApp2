@@ -7,8 +7,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.fitapp2.vistas.AlimentosConsumidosScreen
 import com.example.fitapp2.vistas.BuscarScreen
 import com.example.fitapp2.vistas.DatosInicialesScreen
+import com.example.fitapp2.vistas.DetallesScreen
 import com.example.fitapp2.vistas.InfoPersonalScreen
 import com.example.fitapp2.vistas.LoginScreen
 import com.example.fitapp2.vistas.PerfilScreen
@@ -81,6 +83,32 @@ fun Navigation(refAlimentos: DatabaseReference, refRegAl: DatabaseReference){
             it.arguments?.let { it1 ->
                 InfoPersonalScreen(navController, it1.getFloat("peso"), it.arguments!!.getFloat("altura"),
                     it.arguments!!.getString("nombre",""))
+            }
+        }
+
+        //DETALLES
+        composable(route = Rutas.DetallesScreen.ruta + "?alimento={alimento}",
+            arguments = listOf(
+                navArgument(name = "alimento"){
+                    type = NavType.SerializableType(Alimento::class.java)
+                }
+            )){
+            val alimento = it.arguments?.getSerializable("alimento") as? Alimento
+            alimento?.let {
+                DetallesScreen(navController, it)
+            }
+        }
+
+        //ALIMENTOS CONSUMIDOS
+        composable(route = Rutas.AlimentosConsumidosScreen.ruta + "/{momentoDia}",
+            arguments = listOf(
+                navArgument(name = "momentoDia"){
+                    type = NavType.StringType
+                }
+            )){
+            val momentoDia = it.arguments?.getString("momentoDia")
+            momentoDia?.let {
+                AlimentosConsumidosScreen(navController, it,refAlimentos,refRegAl)
             }
         }
     }

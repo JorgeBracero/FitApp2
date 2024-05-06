@@ -40,7 +40,7 @@ fun InfoPersonalScreen(navController: NavController, peso: Float, altura: Float,
             contentDescription = "",
             modifier = Modifier.size(20.dp)
                 .clickable {
-                    navController.navigate(Rutas.PerfilScreen.ruta + "/10/1/nombre")
+                    navController.navigateUp() //Navega a la pantalla anterior
                 }
         )
         Spacer(Modifier.width(15.dp))
