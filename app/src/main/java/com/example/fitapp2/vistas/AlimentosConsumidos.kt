@@ -3,6 +3,8 @@ package com.example.fitapp2.vistas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,9 +39,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
@@ -47,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
+import com.example.fitapp2.modelos.Rutas
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -64,7 +71,7 @@ fun AlimentosConsumidosScreen(navController: NavController, momentoDia: String,
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .padding(15.dp)
+            .padding(8.dp)
     ){
         Text(
             text = momentoDia,
@@ -78,7 +85,8 @@ fun AlimentosConsumidosScreen(navController: NavController, momentoDia: String,
 
         Row(
             modifier = Modifier.padding(start = 10.dp),
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
                 value = query,
@@ -132,7 +140,7 @@ fun AlimentosConsumidosScreen(navController: NavController, momentoDia: String,
         }
 
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
         Row(
             modifier = Modifier.padding(start = 10.dp),
@@ -143,10 +151,9 @@ fun AlimentosConsumidosScreen(navController: NavController, momentoDia: String,
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(10.dp)
                 ) {
                     items(alimentos) { alimento ->
-                        DiseñoAlimento(alimento, refRegAl)
+                        DiseñoAlimento(navController,alimento, refRegAl)
                         Divider()
                     }
                 }
@@ -196,8 +203,8 @@ fun getAlimentosDia(
                             println("Alimentos temp fuera de change: $alimentosTemp")
                             // Filtramos los alimentos por la búsqueda
                             val alimentosBuscados = alimentosTemp.filter {
-                                it.descAlimento.toLowerCase().contains(query.toLowerCase()) ||
-                                        it.marcaAlimento.toLowerCase().contains(query.toLowerCase())
+                                it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
+                                        it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
                             }
 
                             println("Alimentos Buscados: $alimentosBuscados")
@@ -213,6 +220,8 @@ fun getAlimentosDia(
                             callback(emptyList())
                         }
                     })
+                    // Eliminar el listener de RegAlimentos después de que se complete el onDataChange
+                    refRegAl.removeEventListener(this)
                 }
             }
         }
@@ -226,79 +235,108 @@ fun getAlimentosDia(
 }
 
 @Composable
-fun DiseñoAlimento(alimento: Alimento, refRegAl: DatabaseReference){
-    var cantidad by rememberSaveable { mutableStateOf(obtenerCantidadAlimentoBD(alimento,refRegAl)) }
+fun DiseñoAlimento(navController: NavController, alimento: Alimento, refRegAl: DatabaseReference) {
+    var cantidad by rememberSaveable { mutableStateOf(1) }
+    var cantidadObtenida by rememberSaveable { mutableStateOf(false) }
     var opacidad by rememberSaveable { mutableStateOf(1f) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ){
-        Image(
-            imageVector = Icons.Default.Lock,
-            contentDescription = "Alimento"
-        )
-        Column {
-            Text(
-                text = alimento.descAlimento,
-                style = MaterialTheme.typography.titleMedium,
-                fontSize = TextUnit(13f, TextUnitType.Sp)
-            )
-            Text(
-                text = alimento.marcaAlimento,
-                style = MaterialTheme.typography.titleSmall,
-                fontSize = TextUnit(7f, TextUnitType.Sp)
-            )
-        }
+    obtenerCantidadAlimentoBD(alimento,refRegAl, { cantidadBD ->
+        println("Cantidad antes de la asignacion: $cantidadBD")
+        cantidad = cantidadBD
+        cantidadObtenida = true
+    })
 
-        Spacer(Modifier.width(35.dp))
-        Text(
-            text = "Cantidad",
-            fontSize = TextUnit(9f, TextUnitType.Sp)
-        )
+    //Aseguramos de que el valor de cantidad cambia en la BD
+    if(cantidadObtenida) {
+        //var isLongPressActive = false
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    //Navego a los detalles de ese alimento
+                    navController.navigate(Rutas.DetallesScreen.ruta + "/${alimento.idAlimento}")
+                }
+                .pointerInput(Unit) {
+                    detectDragGesturesAfterLongPress { change, dragAmount ->
+                        println("EY TOCON")
+                    }
+                },
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = alimento.descAlimento,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = TextUnit(20f, TextUnitType.Sp)
+                )
+                Text(
+                    text = alimento.marcaAlimento,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = TextUnit(10f, TextUnitType.Sp)
+                )
+            }
 
-        Button(
-            onClick = {
-                if(cantidad > 1){
-                    cantidad--
+            Button(
+                onClick = {
+                    if (cantidad > 1) {
+                        cantidad--
+
+                        //Update en la BD
+                        actualizarCantidadBD(alimento, refRegAl, cantidad)
+                    }
+                },
+                modifier = Modifier.graphicsLayer(alpha = opacidad),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.DarkGray
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar cantidad",
+                    tint = Color.White
+                )
+            }
+
+            Column {
+                Text(
+                    text = "Cantidad",
+                    fontSize = TextUnit(10f, TextUnitType.Sp)
+                )
+
+                Text(
+                    text = "x$cantidad",
+                    onTextLayout = {
+                        //Listener para cuando cambia el texto, volvemos el boton de menos mas oscuro
+                        if (cantidad == 1) {
+                            opacidad = 0.5f
+                        }
+                    },
+                    fontWeight = FontWeight.Bold,
+                    fontSize = TextUnit(20f, TextUnitType.Sp)
+                )
+
+            }
+
+
+            Button(
+                onClick = {
+                    if (cantidad == 1) {
+                        opacidad = 1f
+                    }
+                    cantidad++
 
                     //Update en la BD
-                    actualizarCantidadBD(alimento,refRegAl,cantidad)
-                }
-            },
-            modifier = Modifier.graphicsLayer(alpha = opacidad)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Eliminar cantidad"
-            )
-        }
-
-        //Muestra la cantidad de ese alimento consumida
-        Text(
-            text = "x$cantidad",
-            onTextLayout = {
-                //Listener para cuando cambia el texto, volvemos el boton de menos mas oscuro
-                if(cantidad == 1) {
-                    opacidad = 0.5f
-                }
-            },
-            fontWeight = FontWeight.Bold,
-            fontSize = TextUnit(7f, TextUnitType.Sp)
-        )
-
-        Button(
-            onClick = {
-                cantidad++
-
-                //Update en la BD
-                actualizarCantidadBD(alimento,refRegAl,cantidad)
+                    actualizarCantidadBD(alimento, refRegAl, cantidad)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.DarkGray
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Añadir cantidad",
+                    tint = Color.White
+                )
             }
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "Añadir cantidad"
-            )
         }
     }
 }
@@ -314,25 +352,31 @@ private fun actualizarCantidadBD(alimento: Alimento, refRegAl: DatabaseReference
         }
 }
 
-private fun obtenerCantidadAlimentoBD(alimento: Alimento, refRegAl: DatabaseReference): Int {
-    var cantidad  = 1
+private fun obtenerCantidadAlimentoBD(alimento: Alimento, refRegAl: DatabaseReference,
+                                      callback: (Int) -> Unit) {
+    var cantidadBD = 1
     refRegAl.addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             snapshot.children.forEach { reg ->
                 val regAlimento = reg.getValue(RegAlimento::class.java)
                 regAlimento?.let { //Comprobamos que no sea nulo
                     if(regAlimento.idAlimento.equals(alimento.idAlimento)){ //Buscamos el alimento de la vuelta
-                        cantidad = regAlimento.cantidad
+                        cantidadBD = regAlimento.cantidad
+                        println("Cantidad del alimento: $cantidadBD")
+                        return@forEach //Sale del bucle
                     }
                 }
             }
+
+            //Sale del bucle, y llama al callback
+            println("sali del bucle, llamando al callback")
+            callback(cantidadBD)
         }
 
         override fun onCancelled(error: DatabaseError) {
             println("No se ha extraido la cantidad del alimento correctamente")
+            callback(1)
         }
     })
-
-    return cantidad
 }
 

@@ -87,15 +87,15 @@ fun Navigation(refAlimentos: DatabaseReference, refRegAl: DatabaseReference){
         }
 
         //DETALLES
-        composable(route = Rutas.DetallesScreen.ruta + "?alimento={alimento}",
+        composable(route = Rutas.DetallesScreen.ruta + "/{id}",
             arguments = listOf(
-                navArgument(name = "alimento"){
-                    type = NavType.SerializableType(Alimento::class.java)
+                navArgument(name = "id"){
+                    type = NavType.StringType
                 }
             )){
-            val alimento = it.arguments?.getSerializable("alimento") as? Alimento
-            alimento?.let {
-                DetallesScreen(navController, it)
+            val id = it.arguments?.getString("id")
+            id?.let {
+                DetallesScreen(navController, refAlimentos, id)
             }
         }
 

@@ -1,7 +1,6 @@
 package com.example.fitapp2.modelos
 
 import com.google.gson.annotations.SerializedName
-import java.io.Serializable
 
 data class ValorNutrientes(
     @SerializedName("carbohydrates") val carbohidratos: Double,
@@ -10,7 +9,7 @@ data class ValorNutrientes(
     @SerializedName("salt") val sal: Double,
     @SerializedName("sodium") val sodio: Double,
     @SerializedName("sugars") val azucar: Double
-): Serializable {
+) {
     //Constructor firebase
     constructor() : this(3.0, 3.0,3.0,3.0,3.0,3.0)
 }

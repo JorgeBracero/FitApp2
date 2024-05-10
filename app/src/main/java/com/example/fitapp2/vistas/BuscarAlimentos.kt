@@ -215,8 +215,8 @@ fun getAlimentosLocal(query: String, refAlimentos: DatabaseReference, callback: 
 
             // Filtramos los alimentos por la búsqueda
             val alimentosBuscados = alimentosTemp.filter {
-                it.descAlimento.toLowerCase().contains(query.toLowerCase()) ||
-                it.marcaAlimento.toLowerCase().contains(query.toLowerCase())
+                it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
+                it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
             }
 
             // Llamamos al callback con la lista filtrada
@@ -310,6 +310,7 @@ private fun extractBarcodesFromHtml(html: String): List<String> {
 fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: String,
                  refAlimentos: DatabaseReference, refRegAl: DatabaseReference, conexion: Boolean){
     var imgSubida by rememberSaveable { mutableStateOf(false) }
+    var alimentoGuardado by rememberSaveable { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -317,8 +318,7 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
             .padding(15.dp)
             .clickable {
                 //Navega a la pantalla de detalles del producto
-                //Pasamos el objeto alimento por parametro
-                //navController.navigate(Rutas.DetallesScreen.ruta + "?alimento=$alimento")
+                navController.navigate(Rutas.DetallesScreen.ruta + "/${alimento.idAlimento}")
             },
         colors = CardDefaults.cardColors(
             containerColor = Color.DarkGray,
@@ -354,9 +354,10 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
                 ) //Marca del alimento
 
                 //Si tenemos conexion, podra guardar el usuario el producto en la base de datos
-                if(conexion) {
+                if(conexion && !alimentoGuardado) {
                     //Boton para guardar el producto en nuestra base de datos en la tabla 'Alimentos'
                     Button(onClick = {
+                        alimentoGuardado = true
                         imgSubida = true //Se puede subir la imagen
                     }) {
                         Text(text = "Guardar")
