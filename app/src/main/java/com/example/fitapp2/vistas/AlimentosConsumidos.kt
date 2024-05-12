@@ -1,9 +1,12 @@
 package com.example.fitapp2.vistas
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,16 +16,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -30,6 +37,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -46,11 +54,13 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.fitapp2.R
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
@@ -58,6 +68,8 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -153,7 +165,7 @@ fun AlimentosConsumidosScreen(navController: NavController, momentoDia: String,
                         .fillMaxWidth()
                 ) {
                     items(alimentos) { alimento ->
-                        DiseñoAlimento(navController,alimento, refRegAl)
+                        DiseñoAlimento(navController,alimento, momentoDia,refAlimentos, refRegAl)
                         Divider()
                     }
                 }
@@ -234,11 +246,15 @@ fun getAlimentosDia(
     })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiseñoAlimento(navController: NavController, alimento: Alimento, refRegAl: DatabaseReference) {
+fun DiseñoAlimento(navController: NavController, alimento: Alimento, momentoDia: String,
+                   refAlimentos: DatabaseReference, refRegAl: DatabaseReference) {
     var cantidad by rememberSaveable { mutableStateOf(1) }
     var cantidadObtenida by rememberSaveable { mutableStateOf(false) }
     var opacidad by rememberSaveable { mutableStateOf(1f) }
+    var isHolding by rememberSaveable { mutableStateOf(false) }
+    var borrarAlimento by rememberSaveable { mutableStateOf(false) }
     obtenerCantidadAlimentoBD(alimento,refRegAl, { cantidadBD ->
         println("Cantidad antes de la asignacion: $cantidadBD")
         cantidad = cantidadBD
@@ -247,18 +263,16 @@ fun DiseñoAlimento(navController: NavController, alimento: Alimento, refRegAl: 
 
     //Aseguramos de que el valor de cantidad cambia en la BD
     if(cantidadObtenida) {
-        //var isLongPressActive = false
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable {
-                    //Navego a los detalles de ese alimento
-                    navController.navigate(Rutas.DetallesScreen.ruta + "/${alimento.idAlimento}")
-                }
                 .pointerInput(Unit) {
-                    detectDragGesturesAfterLongPress { change, dragAmount ->
-                        println("EY TOCON")
-                    }
+                    detectTapGestures(
+                        onLongPress = {
+                            //Metodo para controlar que el usuario esta manteniendo el alimento
+                            isHolding = true
+                        }
+                    )
                 },
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -266,12 +280,34 @@ fun DiseñoAlimento(navController: NavController, alimento: Alimento, refRegAl: 
                 Text(
                     text = alimento.descAlimento,
                     style = MaterialTheme.typography.titleLarge,
-                    fontSize = TextUnit(20f, TextUnitType.Sp)
+                    fontSize = TextUnit(20f, TextUnitType.Sp),
+                    modifier = Modifier.clickable {
+                        //Navego a los detalles de ese alimento
+                        navController.navigate(Rutas.DetallesScreen.ruta + "/${alimento.idAlimento}")
+                    }
                 )
                 Text(
                     text = alimento.marcaAlimento,
                     style = MaterialTheme.typography.titleMedium,
                     fontSize = TextUnit(10f, TextUnitType.Sp)
+                )
+            }
+
+            //Panel para poder cambiar el momento del dia
+            //Lo pondremos en forma de textfield
+            Column {
+                Text(text = "MomentoDia")
+                OutlinedTextField(
+                    value = momentoDia,
+                    onValueChange = {},
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = "",
+                            tint = Color.White
+                        )
+                    },
+                    readOnly = true
                 )
             }
 
@@ -289,10 +325,9 @@ fun DiseñoAlimento(navController: NavController, alimento: Alimento, refRegAl: 
                     containerColor = Color.DarkGray
                 )
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar cantidad",
-                    tint = Color.White
+                Text(
+                    text = "-",
+                    color = Color.White
                 )
             }
 
@@ -338,6 +373,60 @@ fun DiseñoAlimento(navController: NavController, alimento: Alimento, refRegAl: 
                 )
             }
         }
+
+        //Boton flotante para eliminar el alimento
+        if(isHolding) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(
+                    onClick = {
+                        //Borra el alimento deseado
+                        //Muestra un Panel para eliminarlo
+                        borrarAlimento = true
+                        isHolding = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.DarkGray
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Borrar Alimento",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+
+
+        if(borrarAlimento){
+            panelBorrarAlimento({
+                    borrarAlimento = false
+                }, {
+                //Si el usuario pulsa en aceptar
+                //Borramos tanto el registro como la imagen del storage, del alimento correspondiente primero
+                //Luego borramos el alimento de la BD, y actualizamos la interfaz y la lista de alimentos
+
+                //Borrar el registro  del alimento
+                refRegAl.child(alimento.idAlimento).removeValue()
+
+                //Borrar la imagen del Storage
+                borrarImgStorage(alimento)
+
+                //Borrar el alimento
+                refAlimentos.child(alimento.idAlimento).removeValue()
+
+                //Cerrar el dialogo
+                borrarAlimento = false
+
+                //Navegamos a la pantalla principal para que los cambios se actualicen
+                navController.navigateUp()
+            })
+        }
     }
 }
 
@@ -350,6 +439,61 @@ private fun actualizarCantidadBD(alimento: Alimento, refRegAl: DatabaseReference
             //Ha ocurrido algun error
             println("No se ha actualizado la cantidad bien: ${it.message}")
         }
+}
+
+private fun actualizarMomentoDiaBD(alimento: Alimento, refRegAl: DatabaseReference, momento: String){
+    refRegAl.child(alimento.idAlimento).child("momentoDia").setValue(momento)
+        .addOnSuccessListener {
+            //Se ha actualizado correctamente la cantidad
+            println("momentoDia actualizado")
+        }.addOnFailureListener {
+            //Ha ocurrido algun error
+            println("No se ha actualizado el momentoDia bien: ${it.message}")
+        }
+}
+
+@Composable
+private fun panelMomentoDia(onDismiss: () -> Unit, actMomentoDiaBD: () -> Unit){
+    var selectedItem by rememberSaveable { mutableStateOf(0) }
+    val items = listOf("Desayuno","Almuerzo","Cena")
+    var icon by remember { mutableStateOf(Icons.Default.KeyboardArrowDown) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {},
+        text = {
+            Column(
+                modifier = Modifier.padding(8.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                items.forEach { item ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                selectedItem = items.indexOf(item)
+                                //showPanel = false
+                                icon = Icons.Default.KeyboardArrowDown
+                            }
+                    ) {
+                        Text(text = item)
+                        Spacer(modifier = Modifier.weight(1f))
+                        RadioButton(
+                            selected = selectedItem == items.indexOf(item),
+                            onClick = {
+                                selectedItem = items.indexOf(item)
+                                icon = Icons.Default.KeyboardArrowDown
+                                //showPanel = false
+                            }
+                        )
+                    }
+                    Divider()
+                }
+            }
+        },
+        containerColor = Color.DarkGray
+    )
 }
 
 private fun obtenerCantidadAlimentoBD(alimento: Alimento, refRegAl: DatabaseReference,
@@ -378,5 +522,60 @@ private fun obtenerCantidadAlimentoBD(alimento: Alimento, refRegAl: DatabaseRefe
             callback(1)
         }
     })
+}
+
+private fun borrarImgStorage(alimento: Alimento){
+    // Obtiene una instancia de FirebaseStorage
+    val storage = FirebaseStorage.getInstance()
+
+    // Referencia al archivo que deseas eliminar
+    val ref = storage.reference.child("images/${alimento.imgAlimento}.jpg")
+
+    // Elimina el archivo
+    ref.delete()
+        .addOnSuccessListener {
+            // La eliminación se realizó con éxito
+            println("Archivo eliminado exitosamente.")
+        }
+        .addOnFailureListener { exception ->
+            // Ocurrió un error al intentar eliminar el archivo
+            println("Error al eliminar el archivo: $exception")
+        }
+}
+
+@Composable
+private fun panelBorrarAlimento(onDismiss: () -> Unit, borradoBD: () -> Unit){
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(
+                onClick = borradoBD,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Blue,
+                    contentColor = Color.White
+                )
+            ){
+                Text(text = "Aceptar")
+            }
+        },
+        title = {
+          Text(text = "Eliminar alimento")
+        },
+        text = {
+          Text(text = "¿Estas seguro de eliminar el alimento?")
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White
+                )
+            ){
+                Text(text = "Cancelar")
+            }
+        },
+        containerColor = Color.DarkGray
+    )
 }
 

@@ -7,14 +7,25 @@ import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,36 +39,22 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil.compose.ImagePainter
-import coil.compose.rememberImagePainter
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
 import com.example.fitapp2.modelos.Alimento
-import com.google.firebase.Firebase
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.storage
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,10 +76,13 @@ fun DetallesScreen(navController: NavController, refAlimentos: DatabaseReference
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(
-                            text = alimento!!.descAlimento,
-                            fontWeight = FontWeight.ExtraBold
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = alimento!!.descAlimento,
+                                fontWeight = FontWeight.ExtraBold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     },
                     navigationIcon = {
                         Icon(
@@ -103,30 +103,109 @@ fun DetallesScreen(navController: NavController, refAlimentos: DatabaseReference
                 )
             }
         ) {
+            // Creamos un ScrollState
+            val scrollState = rememberScrollState()
+            //Activamos el desplazamiento vertical
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(it)
-                    .background(Color.DarkGray),
+                    .background(Color.DarkGray)
+                    .verticalScroll(state = scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                var imagenFile: File? = null
-                var imagenDescargada = false
-                descargarImagen(LocalContext.current, alimento!!.imgAlimento, { localFile, exception ->
-                    imagenFile = localFile
-                    imagenDescargada = true
-                })
-
-                if(imagenDescargada && imagenFile != null) {
-                    val bitmap = BitmapFactory.decodeFile(imagenFile!!.absolutePath)
-                    val bitmapPainter = bitmap.asImageBitmap()
-
-                    Image(
-                        bitmap = bitmapPainter,
-                        contentDescription = null
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ){
+                    mostrarImagen(alimento!!)
+                    Column {
+                        Text(text = "Alimento: ${alimento!!.descAlimento}")
+                        Text(text = "Marca: ${alimento!!.marcaAlimento}")
+                    }
                 }
+
+
+                Text(text = "Categorias", textAlign = TextAlign.Start)
+                //Mostramos cada una de las categorias por separado
+                alimento!!.catsAlimento.trim().split(",").forEach { cat ->
+                    Card(
+                        modifier = Modifier.padding(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.Gray,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(text = cat)
+                    }
+                }
+
+                Divider(color = Color.White)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(7.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    Text(text = "Ingredientes", textAlign = TextAlign.Start)
+                    Text(text = "Nutrientes", textAlign = TextAlign.Start)
+                }
+
+                //Ingredientes
+                Column(
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    //Recorremos cada uno de los ingredientes, y los mostramos junto a su porcentaje asociado
+                    alimento!!.ingredientes.forEach { ing ->
+                        val idFormateado = ing.idIng.substring(ing.idIng.indexOf(":") + 1)
+                        if(ing.porcentaje > 0) {
+                            Text(text = "$idFormateado: ${ing.porcentaje}%")
+                        }
+                    }
+                }
+
+                //Nutrientes
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    //Recorremos cada uno de los ingredientes, y los mostramos junto a su porcentaje asociado
+                    Text(text = "Azucar: ${alimento!!.nutrientes.azucar} g")
+                    Text(text = "Sal: ${alimento!!.nutrientes.sal} g")
+                    Text(text = "Carbohidratos: ${alimento!!.nutrientes.carbohidratos} g")
+                    Text(text = "Proteinas: ${alimento!!.nutrientes.proteinas} g")
+                    Text(text = "Sodio: ${alimento!!.nutrientes.sodio} g")
+                }
+
+                //Calorias
+                Text(text = "Calorias Totales: ${alimento!!.nutrientes.calorias} cal")
             }
+        }
+    }
+}
+
+@Composable
+fun mostrarImagen(alimento: Alimento){
+    var imagenFile: File? = null
+    var imagenDescargada = false
+    descargarImagen(LocalContext.current, alimento!!.imgAlimento, { localFile, exception ->
+        imagenFile = localFile
+        imagenDescargada = true
+    })
+
+    if(imagenDescargada && imagenFile != null) {
+        val bitmap = BitmapFactory.decodeFile(imagenFile!!.absolutePath)
+
+        if(bitmap != null) {
+            val bitmapPainter = bitmap.asImageBitmap()
+
+            Image(
+                bitmap = bitmapPainter,
+                contentDescription = null
+            )
+        }else{
+            Text(text = "No se puede cargar la imagen.")
         }
     }
 }

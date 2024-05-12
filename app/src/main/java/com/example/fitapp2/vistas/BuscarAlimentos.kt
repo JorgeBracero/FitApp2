@@ -66,7 +66,12 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -76,6 +81,7 @@ import com.example.fitapp2.modelos.Rutas
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.io.File
@@ -311,6 +317,8 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
                  refAlimentos: DatabaseReference, refRegAl: DatabaseReference, conexion: Boolean){
     var imgSubida by rememberSaveable { mutableStateOf(false) }
     var alimentoGuardado by rememberSaveable { mutableStateOf(false) }
+    var botonBloqueado by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -359,12 +367,24 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
                     Button(onClick = {
                         alimentoGuardado = true
                         imgSubida = true //Se puede subir la imagen
+                        botonBloqueado = true
+                        // Desbloquear el botón después de 5 segundos
+                        coroutineScope.launch {
+                            delay(5000)
+                            botonBloqueado = false
+                        }
                     }) {
                         Text(text = "Guardar")
                     }
                 }
             }
         }
+    }
+
+
+    if(botonBloqueado){
+        // Bloquear el botón de retroceso
+        BloquearBotonRetroceso()
     }
 
     //Si la descarga de la imagen ha ido bien, se sigue con el proceso de guardado
@@ -376,6 +396,31 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
     }
 }
 
+
+//Bloqueamos el boton de retroceso cuando guarde algun alimento
+@Composable
+fun BloquearBotonRetroceso() {
+    val onBackPressedDispatcherOwner = LocalOnBackPressedDispatcherOwner.current
+    val onBackPressedDispatcher = onBackPressedDispatcherOwner?.onBackPressedDispatcher
+
+    DisposableEffect(Unit) {
+        val callback = onBackPressedDispatcher?.let {
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    // No hacer nada cuando se presiona el botón de retroceso
+                }
+            }
+        }
+
+        callback?.let {
+            it.isEnabled = true // Habilitar el callback para interceptar las pulsaciones de retroceso
+            it.handleOnBackPressed() // Interceptar las pulsaciones de retroceso
+            onDispose {
+                it.isEnabled = false // Deshabilitar el callback al deshacer el efecto
+            }
+        }!!
+    }
+}
 
 //Subir Imagen de los productos guardados a storage
 @Composable
@@ -406,65 +451,53 @@ fun subirImagen(alimento: Alimento, refAlimentos: DatabaseReference) {
 //Descargar Imagen del alimento del Firebase Storage
 @Composable
 fun ImgAlimentoStorage(img: String) {
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var fileInputStream: FileInputStream? = null
+    var imagenFile: File? = null
+    var imagenDescargada = false
+    descargarImagenStorage(LocalContext.current, img, { localFile, exception ->
+        imagenFile = localFile
+        imagenDescargada = true
+    })
 
-    LaunchedEffect(img) {
-        withContext(Dispatchers.IO) {
-            try {
-                // Obtener referencia al almacenamiento de Firebase
-                val storageRef = FirebaseStorage.getInstance().reference
-                // Referencia a la imagen en Firebase Storage
-                val imageRef = storageRef.child("images/$img.jpg")
-                // Archivo local donde se guardará la imagen
-                val localFile = File.createTempFile(img, "jpg")
-                println("Archivo local: $localFile")
-                // Descargar la imagen desde Firebase Storage al archivo local
-                imageRef.getFile(localFile).await()
-                // Decodificar el archivo local a Bitmap
-                val fileInputStream = FileInputStream(localFile)
-                val bmp = BitmapFactory.decodeStream(fileInputStream)
-                bitmap = bmp
-                println("Bitmap correcto: $bitmap")
-            } catch (e: Exception) {
-                println("Error al cargar la imagen local: $e")
-                // Imprimir el mensaje de error para obtener más información
-            } finally {
-                // Cerrar el flujo de entrada del archivo en cualquier caso
-                fileInputStream?.close()
-            }
+    if(imagenDescargada && imagenFile != null) {
+        val bitmap = BitmapFactory.decodeFile(imagenFile!!.absolutePath)
+
+        if(bitmap != null) {
+            val bitmapPainter = bitmap.asImageBitmap()
+
+            Image(
+                bitmap = bitmapPainter,
+                contentDescription = null
+            )
+        }else{
+            Text(text = "No se puede cargar la imagen.")
         }
-    }
-
-    bitmap?.let {
-        val imageBitmap = it.asImageBitmap() // Convertir el Bitmap a ImageBitmap
-        Image(
-            bitmap = imageBitmap,
-            contentDescription = "",
-            modifier = Modifier.size(100.dp)
-        )
     }
 }
 
-/*
-fun loadBitmapFromLocalStorage(img: String, callback: (Bitmap?) -> Unit) {
-    val storage = FirebaseStorage.getInstance()
-    val localFile = File.createTempFile(img, "jpg") // Crear un archivo temporal local
+fun descargarImagenStorage(context: Context, fileName: String, callback: (File?, Exception?) -> Unit) {
+    // Crear un archivo local persistente en el directorio de almacenamiento interno de la aplicación
+    val localFile = File(context.filesDir, "${fileName}.jpg")
+    // Verificar si el archivo ya existe localmente
+    if (localFile.exists()) {
+        // Llamar al callback con el archivo local
+        callback(localFile, null)
+    } else {
+        // Si el archivo no existe localmente, descargarlo de Firebase Storage
+        val storageRef = FirebaseStorage.getInstance().reference
+        val audioRef = storageRef.child("images/${fileName}.jpg")
 
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
-            // Descargar la imagen desde Firebase Storage y guardarla localmente
-            storage.reference.child("images/$img.jpg").getFile(localFile).await()
-            // Decodificar el archivo local a Bitmap
-            val bitmap = BitmapFactory.decodeStream(FileInputStream(localFile))
-            println("Bitmap: $bitmap")
-            callback(bitmap)
-        } catch (e: Exception) {
-            println("Error del bitmap: ${e.message}")
-            callback(null)
-        }
+        audioRef.getFile(localFile)
+            .addOnSuccessListener {
+                // Llamar al callback con el archivo local
+                callback(localFile, null)
+            }
+            .addOnFailureListener { exception ->
+                // Manejar errores de descarga llamando al callback con la excepción
+                println("Fallida ${fileName}")
+                callback(null, exception)
+            }
     }
-}*/
+}
 
 
 //Descargar Imagen del alimento dada una url
