@@ -77,6 +77,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDeepLinkRequest
+import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.RegAlimentoController
+import com.example.fitapp2.metodos.isConnectedToNetwork
 import com.example.fitapp2.modelos.Rutas
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -89,7 +92,7 @@ import java.io.FileInputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BuscarScreen(navController: NavController, momentoDia: String,refAlimentos: DatabaseReference, refRegAl: DatabaseReference){
+fun BuscarScreen(navController: NavController, momentoDia: String,alimentoController: AlimentoController, regAlimentoController: RegAlimentoController){
     var query by rememberSaveable { mutableStateOf("") }
     var showClear by rememberSaveable { mutableStateOf(false) }
     var alimentos by remember { mutableStateOf<List<Alimento>>(emptyList()) }
@@ -125,8 +128,7 @@ fun BuscarScreen(navController: NavController, momentoDia: String,refAlimentos: 
                 label = { Text(text = "Alimentos") },
                 colors = TextFieldDefaults.textFieldColors(
                     containerColor = Color.White,
-                    cursorColor = Color.Blue,
-                    textColor = Color.Black
+                    cursorColor = Color.Blue
                 ),
                 leadingIcon = {
                     Icon(
@@ -168,7 +170,7 @@ fun BuscarScreen(navController: NavController, momentoDia: String,refAlimentos: 
                     println("Estas sin wifi")
 
                     //Rellenamos la lista de alimentos con los alimentos de la base de datos
-                    getAlimentosLocal(query,refAlimentos, { alimentosBuscados ->
+                    alimentoController.getAlimentosLocal(query, { alimentosBuscados ->
                         alimentos = alimentosBuscados
                     })
                 }
@@ -194,7 +196,7 @@ fun BuscarScreen(navController: NavController, momentoDia: String,refAlimentos: 
                                 alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
                                 alimento.marcaAlimento.isNotEmpty()
                         if(alimentoCorrecto){
-                            CardALimento(navController,alimento,momentoDia,refAlimentos,refRegAl,conexion) //Creamos un card para cada uno
+                            CardALimento(navController,alimento,momentoDia,alimentoController,regAlimentoController,conexion) //Creamos un card para cada uno
                         }
                     }
                 }
@@ -202,56 +204,6 @@ fun BuscarScreen(navController: NavController, momentoDia: String,refAlimentos: 
                 Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
             }
         }
-    }
-}
-
-
-//Funcion para obtener todos los alimentos en cache de la base de datos
-fun getAlimentosLocal(query: String, refAlimentos: DatabaseReference, callback: (List<Alimento>) -> Unit) {
-    val alimentosTemp = mutableListOf<Alimento>()
-
-    refAlimentos.addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(dataSnapshot: DataSnapshot) {
-            dataSnapshot.children.forEach { data ->
-                val alimento = data.getValue(Alimento::class.java)
-                alimento?.let {
-                    alimentosTemp.add(it)
-                }
-            }
-
-            // Filtramos los alimentos por la búsqueda
-            val alimentosBuscados = alimentosTemp.filter {
-                it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
-                it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
-            }
-
-            // Llamamos al callback con la lista filtrada
-            callback(alimentosBuscados)
-        }
-
-        override fun onCancelled(databaseError: DatabaseError) {
-            // Manejar el caso de error
-            println("Error al obtener alimentos locales: ${databaseError.message}")
-            // Llamamos al callback con una lista vacía en caso de error
-            callback(emptyList())
-        }
-    })
-}
-
-//Funcion para comprobar si el usuario tiene conexion a Internet
-fun isConnectedToNetwork(context: Context): Boolean {
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        val network = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(network)
-        return capabilities != null &&
-                (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
-    } else {
-        val networkInfo = connectivityManager.activeNetworkInfo
-        return networkInfo != null && networkInfo.isConnected
     }
 }
 
@@ -314,7 +266,7 @@ private fun extractBarcodesFromHtml(html: String): List<String> {
 //Vista del alimento extraido
 @Composable
 fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: String,
-                 refAlimentos: DatabaseReference, refRegAl: DatabaseReference, conexion: Boolean){
+                 alimentoController: AlimentoController, regAlimentoController: RegAlimentoController, conexion: Boolean){
     var imgSubida by rememberSaveable { mutableStateOf(false) }
     var alimentoGuardado by rememberSaveable { mutableStateOf(false) }
     var botonBloqueado by remember { mutableStateOf(false) }
@@ -389,10 +341,11 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
 
     //Si la descarga de la imagen ha ido bien, se sigue con el proceso de guardado
     if(imgSubida){
-        subirImagen(alimento,refAlimentos)
+        subirImagen(alimento, alimentoController)
 
         //Por ultimo subo el registro de ese alimento
-        refRegAl.child(alimento.idAlimento).setValue(RegAlimento(alimento.idAlimento, momentoDia,1))
+        val regAlimento = RegAlimento(alimento.idAlimento, momentoDia,1)
+        regAlimentoController.addRegAlimento(alimento, regAlimento)
     }
 }
 
@@ -424,7 +377,7 @@ fun BloquearBotonRetroceso() {
 
 //Subir Imagen de los productos guardados a storage
 @Composable
-fun subirImagen(alimento: Alimento, refAlimentos: DatabaseReference) {
+fun subirImagen(alimento: Alimento, alimentoController: AlimentoController) {
     LaunchedEffect(alimento.imgAlimento) {
         withContext(Dispatchers.IO) {
             val store = FirebaseStorage.getInstance()
@@ -439,7 +392,7 @@ fun subirImagen(alimento: Alimento, refAlimentos: DatabaseReference) {
 
 
                 //Guardo el alimento seleccionado y su registro en la db, a partir de mi ref
-                refAlimentos.child(alimento.idAlimento).setValue(alimento)
+                alimentoController.addAlimento(alimento)
             }.addOnFailureListener { exception ->
                 println("Error al subir la imagen del producto: ${alimento.descAlimento}\n$exception")
             }

@@ -49,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.modelos.Alimento
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -59,13 +60,13 @@ import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetallesScreen(navController: NavController, refAlimentos: DatabaseReference, id: String){
+fun DetallesScreen(navController: NavController, alimentoController: AlimentoController, id: String){
     //Recuperamos el alimento asociado a ese id
     var alimento by remember { mutableStateOf<Alimento?>(null) }
 
     // Lanzamos la carga del alimento al entrar en la pantalla
     LaunchedEffect(Unit) {
-        obtenerAlimento(refAlimentos, id) { alimentoBD ->
+        alimentoController.obtenerAlimento(id) { alimentoBD ->
             alimento = alimentoBD
         }
     }
@@ -233,34 +234,4 @@ fun descargarImagen(context: Context, fileName: String, callback: (File?, Except
                 callback(null, exception)
             }
     }
-}
-
-
-private fun obtenerAlimento(refAlimentos: DatabaseReference, id: String, callback : (Alimento) -> Unit) {
-    var alimentoBD = Alimento()
-
-    //Obtenemos el alimento de la base de datos, dado a ese id
-    refAlimentos.addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            snapshot.children.forEach { alimento ->
-                val al = alimento.getValue(Alimento::class.java)
-                al?.let { //Comprobamos que no sea nulo
-                    println("Alimento: $al")
-                    if(al.idAlimento == id){ //Buscamos el alimento que tenga ese id
-                        alimentoBD = al
-                        println("Alimento extraido de la base de datos: ${alimentoBD.idAlimento}")
-                        return@forEach //Sale del bucle una vez lo hemos encontrado
-                    }
-                }
-            }
-
-            //Llamamos al callback
-            callback(alimentoBD)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            println("No se ha extraido el alimento correctamente")
-            callback(alimentoBD)
-        }
-    })
 }

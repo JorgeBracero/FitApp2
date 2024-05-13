@@ -18,6 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.example.fitapp2.apiService.ApiServiceFactory
+import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.Navigation
 import com.example.fitapp2.ui.theme.FitApp2Theme
@@ -46,14 +48,14 @@ class MainActivity : ComponentActivity() {
                     // Activo la persistencia
                     db.setPersistenceEnabled(true)
 
-                    // Saco las referencias a mis tablas
-                    val refAlimentos = db.getReference("alimentos") // Saco la ref a mi tabla alimentos
+                    //Controlador de los alimentos
+                    val alimentoController = AlimentoController(db)
+                    //Sincronizamos los datos localmente
+                    alimentoController.copiaLocal()
 
-                    // En caso que sea de manera local
-                    refAlimentos.keepSynced(true) // Sincroniza los datos
-
-                    val refRegAl = db.getReference("regAlimentos") // Saco ref a mi tabla regAlimentos
-                    Navigation(refAlimentos, refRegAl)
+                    //Controlador de los registros de los alimentos
+                    val regAlimentoController = RegAlimentoController(db)
+                    Navigation(alimentoController, regAlimentoController)
                 }
             }
         }

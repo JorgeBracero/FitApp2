@@ -7,6 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.vistas.AlimentosConsumidosScreen
 import com.example.fitapp2.vistas.BuscarScreen
 import com.example.fitapp2.vistas.DatosInicialesScreen
@@ -19,7 +21,7 @@ import com.google.firebase.database.DatabaseReference
 
 //Gestor de navegacion entre las pantallas de la app
 @Composable
-fun Navigation(refAlimentos: DatabaseReference, refRegAl: DatabaseReference){
+fun Navigation(alimentoController: AlimentoController, regAlimentoController: RegAlimentoController){
     val navController = rememberNavController()
     NavHost(
         navController = navController,
@@ -70,7 +72,7 @@ fun Navigation(refAlimentos: DatabaseReference, refRegAl: DatabaseReference){
                 type = NavType.StringType
             })){
             it.arguments?.let { it1 -> BuscarScreen(navController,
-                it1.getString("momentoDia", ""),refAlimentos,refRegAl) }
+                it1.getString("momentoDia", ""),alimentoController,regAlimentoController) }
         }
 
         //DATOS PERSONALES
@@ -95,7 +97,7 @@ fun Navigation(refAlimentos: DatabaseReference, refRegAl: DatabaseReference){
             )){
             val id = it.arguments?.getString("id")
             id?.let {
-                DetallesScreen(navController, refAlimentos, id)
+                DetallesScreen(navController, alimentoController, id)
             }
         }
 
@@ -108,7 +110,7 @@ fun Navigation(refAlimentos: DatabaseReference, refRegAl: DatabaseReference){
             )){
             val momentoDia = it.arguments?.getString("momentoDia")
             momentoDia?.let {
-                AlimentosConsumidosScreen(navController, it,refAlimentos,refRegAl)
+                AlimentosConsumidosScreen(navController, it,alimentoController,regAlimentoController)
             }
         }
     }
