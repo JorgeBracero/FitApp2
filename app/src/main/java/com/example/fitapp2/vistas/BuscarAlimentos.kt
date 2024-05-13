@@ -79,6 +79,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDeepLinkRequest
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
+import com.example.fitapp2.controladores.StorageController
+import com.example.fitapp2.metodos.BloquearBotonRetroceso
 import com.example.fitapp2.metodos.isConnectedToNetwork
 import com.example.fitapp2.modelos.Rutas
 import com.google.firebase.database.DataSnapshot
@@ -92,7 +94,13 @@ import java.io.FileInputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BuscarScreen(navController: NavController, momentoDia: String,alimentoController: AlimentoController, regAlimentoController: RegAlimentoController){
+fun BuscarScreen(
+    navController: NavController,
+    momentoDia: String,
+    alimentoController: AlimentoController,
+    regAlimentoController: RegAlimentoController,
+    storeController: StorageController
+){
     var query by rememberSaveable { mutableStateOf("") }
     var showClear by rememberSaveable { mutableStateOf(false) }
     var alimentos by remember { mutableStateOf<List<Alimento>>(emptyList()) }
@@ -195,8 +203,17 @@ fun BuscarScreen(navController: NavController, momentoDia: String,alimentoContro
                                 alimento.imgAlimento.isNotEmpty() && alimento.descAlimento != null &&
                                 alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
                                 alimento.marcaAlimento.isNotEmpty()
+
                         if(alimentoCorrecto){
-                            CardALimento(navController,alimento,momentoDia,alimentoController,regAlimentoController,conexion) //Creamos un card para cada uno
+                            CardALimento(
+                                navController,
+                                alimento,
+                                momentoDia,
+                                alimentoController,
+                                regAlimentoController,
+                                storeController,
+                                conexion
+                            ) //Creamos un card para cada uno
                         }
                     }
                 }
@@ -206,6 +223,7 @@ fun BuscarScreen(navController: NavController, momentoDia: String,alimentoContro
         }
     }
 }
+
 
 // Llamada a la Api, devuelve la lista de alimentos buscados
 fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
@@ -251,6 +269,7 @@ fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
     }
 }
 
+
 private fun extractBarcodesFromHtml(html: String): List<String> {
     val barcodes = mutableListOf<String>()
     val document = Jsoup.parse(html)
@@ -265,8 +284,15 @@ private fun extractBarcodesFromHtml(html: String): List<String> {
 
 //Vista del alimento extraido
 @Composable
-fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: String,
-                 alimentoController: AlimentoController, regAlimentoController: RegAlimentoController, conexion: Boolean){
+fun CardALimento(
+    navController: NavController,
+    alimento: Alimento,
+    momentoDia: String,
+    alimentoController: AlimentoController,
+    regAlimentoController: RegAlimentoController,
+    storeController: StorageController,
+    conexion: Boolean
+){
     var imgSubida by rememberSaveable { mutableStateOf(false) }
     var alimentoGuardado by rememberSaveable { mutableStateOf(false) }
     var botonBloqueado by remember { mutableStateOf(false) }
@@ -304,7 +330,7 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
                 ImgAlimentoUrl(url = alimento.imgAlimento) //Imagen del alimento dada una url, con conexion
             }else{
                 println("Imagen sin conexion: ${alimento.imgAlimento}")
-                ImgAlimentoStorage(img = alimento.imgAlimento) //Imagen del alimento del storage, local
+                ImgAlimentoStorage(img = alimento.imgAlimento, storeController) //Imagen del alimento del storage, local
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {
@@ -341,7 +367,7 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
 
     //Si la descarga de la imagen ha ido bien, se sigue con el proceso de guardado
     if(imgSubida){
-        subirImagen(alimento, alimentoController)
+        storeController.subirImagen(alimento, alimentoController)
 
         //Por ultimo subo el registro de ese alimento
         val regAlimento = RegAlimento(alimento.idAlimento, momentoDia,1)
@@ -350,105 +376,20 @@ fun CardALimento(navController: NavController,alimento: Alimento, momentoDia: St
 }
 
 
-//Bloqueamos el boton de retroceso cuando guarde algun alimento
-@Composable
-fun BloquearBotonRetroceso() {
-    val onBackPressedDispatcherOwner = LocalOnBackPressedDispatcherOwner.current
-    val onBackPressedDispatcher = onBackPressedDispatcherOwner?.onBackPressedDispatcher
-
-    DisposableEffect(Unit) {
-        val callback = onBackPressedDispatcher?.let {
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    // No hacer nada cuando se presiona el botón de retroceso
-                }
-            }
-        }
-
-        callback?.let {
-            it.isEnabled = true // Habilitar el callback para interceptar las pulsaciones de retroceso
-            it.handleOnBackPressed() // Interceptar las pulsaciones de retroceso
-            onDispose {
-                it.isEnabled = false // Deshabilitar el callback al deshacer el efecto
-            }
-        }!!
-    }
-}
-
-//Subir Imagen de los productos guardados a storage
-@Composable
-fun subirImagen(alimento: Alimento, alimentoController: AlimentoController) {
-    LaunchedEffect(alimento.imgAlimento) {
-        withContext(Dispatchers.IO) {
-            val store = FirebaseStorage.getInstance()
-            val refStore = store.reference.child("images").child("${alimento.descAlimento}.jpg")
-            val descImg: InputStream = URL(alimento.imgAlimento).openStream()
-
-            // Subo la imagen
-            refStore.putStream(descImg).addOnSuccessListener {
-                println("La imagen se subió con éxito")
-                // Como campo al alimento le añadimos la URL
-                alimento.imgAlimento = alimento.descAlimento
-
-
-                //Guardo el alimento seleccionado y su registro en la db, a partir de mi ref
-                alimentoController.addAlimento(alimento)
-            }.addOnFailureListener { exception ->
-                println("Error al subir la imagen del producto: ${alimento.descAlimento}\n$exception")
-            }
-        }
-    }
-}
-
-
 //Descargar Imagen del alimento del Firebase Storage
 @Composable
-fun ImgAlimentoStorage(img: String) {
-    var imagenFile: File? = null
-    var imagenDescargada = false
-    descargarImagenStorage(LocalContext.current, img, { localFile, exception ->
-        imagenFile = localFile
-        imagenDescargada = true
-    })
+fun ImgAlimentoStorage(img: String, storeController: StorageController) {
+    val bitmap = storeController.getBitmapImagen(LocalContext.current,img)
 
-    if(imagenDescargada && imagenFile != null) {
-        val bitmap = BitmapFactory.decodeFile(imagenFile!!.absolutePath)
+    if(bitmap != null) {
+        val bitmapPainter = bitmap.asImageBitmap()
 
-        if(bitmap != null) {
-            val bitmapPainter = bitmap.asImageBitmap()
-
-            Image(
-                bitmap = bitmapPainter,
-                contentDescription = null
-            )
-        }else{
-            Text(text = "No se puede cargar la imagen.")
-        }
-    }
-}
-
-fun descargarImagenStorage(context: Context, fileName: String, callback: (File?, Exception?) -> Unit) {
-    // Crear un archivo local persistente en el directorio de almacenamiento interno de la aplicación
-    val localFile = File(context.filesDir, "${fileName}.jpg")
-    // Verificar si el archivo ya existe localmente
-    if (localFile.exists()) {
-        // Llamar al callback con el archivo local
-        callback(localFile, null)
-    } else {
-        // Si el archivo no existe localmente, descargarlo de Firebase Storage
-        val storageRef = FirebaseStorage.getInstance().reference
-        val audioRef = storageRef.child("images/${fileName}.jpg")
-
-        audioRef.getFile(localFile)
-            .addOnSuccessListener {
-                // Llamar al callback con el archivo local
-                callback(localFile, null)
-            }
-            .addOnFailureListener { exception ->
-                // Manejar errores de descarga llamando al callback con la excepción
-                println("Fallida ${fileName}")
-                callback(null, exception)
-            }
+        Image(
+            bitmap = bitmapPainter,
+            contentDescription = null
+        )
+    }else{
+        Text(text = "No se puede cargar la imagen.")
     }
 }
 

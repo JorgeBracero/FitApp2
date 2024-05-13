@@ -66,6 +66,7 @@ import androidx.navigation.NavController
 import com.example.fitapp2.R
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
+import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
@@ -78,9 +79,13 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlimentosConsumidosScreen(navController: NavController, momentoDia: String,
-                              alimentoController: AlimentoController, regAlimentoController: RegAlimentoController){
-
+fun AlimentosConsumidosScreen(
+    navController: NavController,
+    momentoDia: String,
+    alimentoController: AlimentoController,
+    regAlimentoController: RegAlimentoController,
+    storeController: StorageController
+){
     var query by rememberSaveable { mutableStateOf("") }
     var showClear by rememberSaveable { mutableStateOf(false) }
     var alimentos by rememberSaveable { mutableStateOf<List<Alimento>>(emptyList()) }
@@ -169,7 +174,14 @@ fun AlimentosConsumidosScreen(navController: NavController, momentoDia: String,
                         .fillMaxWidth()
                 ) {
                     items(alimentos) { alimento ->
-                        DiseñoAlimento(navController,alimento, momentoDia,alimentoController, regAlimentoController)
+                        DiseñoAlimento(
+                            navController,
+                            alimento,
+                            momentoDia,
+                            alimentoController,
+                            regAlimentoController,
+                            storeController
+                        )
                         Divider()
                     }
                 }
@@ -183,8 +195,14 @@ fun AlimentosConsumidosScreen(navController: NavController, momentoDia: String,
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiseñoAlimento(navController: NavController, alimento: Alimento, momentoDia: String,
-                   alimentoController: AlimentoController, regAlimentoController: RegAlimentoController) {
+fun DiseñoAlimento(
+    navController: NavController,
+    alimento: Alimento,
+    momentoDia: String,
+    alimentoController: AlimentoController,
+    regAlimentoController: RegAlimentoController,
+    storeController: StorageController
+) {
     var cantidad by rememberSaveable { mutableStateOf(1) }
     var cantidadObtenida by rememberSaveable { mutableStateOf(false) }
     var opacidad by rememberSaveable { mutableStateOf(1f) }
@@ -366,7 +384,7 @@ fun DiseñoAlimento(navController: NavController, alimento: Alimento, momentoDia
                 regAlimentoController.deleteRegAlimento(alimento)
 
                 //Borrar la imagen del Storage
-                borrarImgStorage(alimento)
+                storeController.borrarImagen(alimento)
 
                 //Borrar el alimento
                 alimentoController.deleteAlimento(alimento)
@@ -444,25 +462,6 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ali
     )
 }
 
-
-private fun borrarImgStorage(alimento: Alimento){
-    // Obtiene una instancia de FirebaseStorage
-    val storage = FirebaseStorage.getInstance()
-
-    // Referencia al archivo que deseas eliminar
-    val ref = storage.reference.child("images/${alimento.imgAlimento}.jpg")
-
-    // Elimina el archivo
-    ref.delete()
-        .addOnSuccessListener {
-            // La eliminación se realizó con éxito
-            println("Archivo eliminado exitosamente.")
-        }
-        .addOnFailureListener { exception ->
-            // Ocurrió un error al intentar eliminar el archivo
-            println("Error al eliminar el archivo: $exception")
-        }
-}
 
 @Composable
 private fun panelBorrarAlimento(onDismiss: () -> Unit, borradoBD: () -> Unit){

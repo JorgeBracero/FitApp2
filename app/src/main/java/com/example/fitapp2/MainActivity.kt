@@ -20,6 +20,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.fitapp2.apiService.ApiServiceFactory
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
+import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.Navigation
 import com.example.fitapp2.ui.theme.FitApp2Theme
@@ -55,7 +56,10 @@ class MainActivity : ComponentActivity() {
 
                     //Controlador de los registros de los alimentos
                     val regAlimentoController = RegAlimentoController(db)
-                    Navigation(alimentoController, regAlimentoController)
+
+                    //Controlador para el Storage
+                    val storeController = StorageController()
+                    Navigation(alimentoController, regAlimentoController,storeController)
                 }
             }
         }
