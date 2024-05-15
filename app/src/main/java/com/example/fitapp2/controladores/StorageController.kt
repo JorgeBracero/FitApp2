@@ -3,8 +3,11 @@ package com.example.fitapp2.controladores
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import com.example.fitapp2.modelos.Alimento
 import com.google.firebase.storage.FirebaseStorage
@@ -17,8 +20,6 @@ import java.net.URL
 
 class StorageController {
     private val storeRef = FirebaseStorage.getInstance().reference
-
-
 
     //Subir Imagen de los productos guardados a storage
     @Composable
@@ -72,6 +73,24 @@ class StorageController {
             return bitmap
         }else{
             return null
+        }
+    }
+
+
+    //Mostrar imagen Storage
+    @Composable
+    fun mostrarImagen(context: Context,img: String){
+        val bitmap = getBitmapImagen(context,img)
+
+        if(bitmap != null) {
+            val bitmapPainter = bitmap.asImageBitmap()
+
+            Image(
+                bitmap = bitmapPainter,
+                contentDescription = null
+            )
+        }else{
+            Text(text = "No se puede cargar la imagen.")
         }
     }
 

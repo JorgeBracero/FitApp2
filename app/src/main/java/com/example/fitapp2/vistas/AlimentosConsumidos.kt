@@ -193,7 +193,6 @@ fun AlimentosConsumidosScreen(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiseñoAlimento(
     navController: NavController,
@@ -250,7 +249,6 @@ fun DiseñoAlimento(
                     )
                 }
 
-                //VerticalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 Button(
                     onClick = {

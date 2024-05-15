@@ -10,12 +10,15 @@ import androidx.navigation.navArgument
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
+import com.example.fitapp2.controladores.UsuarioController
+import com.example.fitapp2.vistas.AjustesScreen
 import com.example.fitapp2.vistas.AlimentosConsumidosScreen
 import com.example.fitapp2.vistas.BuscarScreen
 import com.example.fitapp2.vistas.DatosInicialesScreen
 import com.example.fitapp2.vistas.DetallesScreen
 import com.example.fitapp2.vistas.InfoPersonalScreen
 import com.example.fitapp2.vistas.LoginScreen
+import com.example.fitapp2.vistas.PasswordScreen
 import com.example.fitapp2.vistas.PerfilScreen
 import com.example.fitapp2.vistas.PrincipalScreen
 import com.google.firebase.database.DatabaseReference
@@ -25,7 +28,8 @@ import com.google.firebase.database.DatabaseReference
 fun Navigation(
     alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
-    storeController: StorageController
+    storeController: StorageController,
+    userController: UsuarioController
 ){
     val navController = rememberNavController()
     NavHost(
@@ -34,7 +38,7 @@ fun Navigation(
     ){
         //LOGIN
         composable(route = Rutas.LoginScreen.ruta){
-            LoginScreen(navController)
+            LoginScreen(navController,userController)
         }
 
         //INICIO
@@ -51,20 +55,8 @@ fun Navigation(
         }
 
         //PERFIL
-        composable(route = Rutas.PerfilScreen.ruta + "/{peso}/{altura}/{nombre}",
-            arguments = listOf(
-                navArgument(name = "peso"){ type = NavType.FloatType },
-                navArgument(name = "altura"){ type = NavType.FloatType },
-                navArgument(name = "nombre"){ type = NavType.StringType }
-            )){
-            it.arguments?.let { it1 ->
-                PerfilScreen(
-                    navController,
-                    it1.getFloat("peso"),
-                    it.arguments!!.getFloat("altura"),
-                    it.arguments!!.getString("nombre","")
-                )
-            }
+        composable(route = Rutas.PerfilScreen.ruta){
+            PerfilScreen(navController,userController)
         }
 
         //DATOS INICIALES
@@ -94,20 +86,8 @@ fun Navigation(
         }
 
         //DATOS PERSONALES
-        composable(route = Rutas.InfoPersonalScreen.ruta + "/{peso}/{altura}/{nombre}",
-            arguments = listOf(
-                navArgument(name = "peso"){ type = NavType.FloatType },
-                navArgument(name = "altura"){ type = NavType.FloatType },
-                navArgument(name = "nombre"){ type = NavType.StringType }
-            )){
-            it.arguments?.let { it1 ->
-                InfoPersonalScreen(
-                    navController,
-                    it1.getFloat("peso"),
-                    it.arguments!!.getFloat("altura"),
-                    it.arguments!!.getString("nombre","")
-                )
-            }
+        composable(route = Rutas.InfoPersonalScreen.ruta){
+            InfoPersonalScreen(navController,userController)
         }
 
         //DETALLES
@@ -119,9 +99,10 @@ fun Navigation(
             )){
             val id = it.arguments?.getString("id")
             id?.let {
-                DetallesScreen(navController, alimentoController, id)
+                DetallesScreen(navController, alimentoController, storeController,id)
             }
         }
+
 
         //ALIMENTOS CONSUMIDOS
         composable(route = Rutas.AlimentosConsumidosScreen.ruta + "/{momentoDia}",
@@ -134,6 +115,16 @@ fun Navigation(
             momentoDia?.let {
                 AlimentosConsumidosScreen(navController, it,alimentoController,regAlimentoController,storeController)
             }
+        }
+
+        //AJUSTES DE CUENTA
+        composable(route = Rutas.AjustesScreen.ruta){
+            AjustesScreen(navController, userController)
+        }
+
+        //RESTABLECER CONTRASEÑA
+        composable(route = Rutas.PasswordScreen.ruta){
+            PasswordScreen(navController, userController)
         }
     }
 }

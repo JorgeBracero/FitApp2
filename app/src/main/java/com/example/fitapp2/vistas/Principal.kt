@@ -91,8 +91,8 @@ fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, 
                                 tint = Color.White,
                                 modifier = Modifier.size(45.dp)
                                     .clickable {
-                                        //Navega a la pantalla principal
-                                        navController.navigate(route = Rutas.PerfilScreen.ruta + "/$peso/$altura/$nombre")
+                                        //Navega al perfil del usuario
+                                        navController.navigate(route = Rutas.PerfilScreen.ruta)
                                     }
                             )
                             Text(text = context.getString(R.string.txtPerfil))

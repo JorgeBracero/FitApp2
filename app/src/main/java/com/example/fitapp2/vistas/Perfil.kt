@@ -1,6 +1,7 @@
 package com.example.fitapp2.vistas
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,14 +45,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.R
+import com.example.fitapp2.controladores.UsuarioController
+import com.example.fitapp2.metodos.isConnectedToNetwork
 import com.example.fitapp2.modelos.Rutas
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PerfilScreen(navController: NavController, peso: Float?, altura: Float?, nombre: String?){
+fun PerfilScreen(navController: NavController, userController: UsuarioController){
     val context = LocalContext.current
     var fotoPerfil = Icons.Default.AccountCircle
     Scaffold(
@@ -117,7 +121,8 @@ fun PerfilScreen(navController: NavController, peso: Float?, altura: Float?, nom
                                 imageVector = Icons.Default.Home,
                                 contentDescription = "Inicio",
                                 tint = Color.White,
-                                modifier = Modifier.size(45.dp)
+                                modifier = Modifier
+                                    .size(45.dp)
                                     .clickable {
                                         //Navega a la pantalla principal
                                         navController.navigate(route = Rutas.PrincipalScreen.ruta + "/10/1/nombre")
@@ -189,23 +194,49 @@ fun PerfilScreen(navController: NavController, peso: Float?, altura: Float?, nom
             }
 
 
-            TarjetaPersonal(context.getString(R.string.txtPeso),navController,peso, altura, nombre)
+            TarjetaPersonal(context.getString(R.string.txtPeso),navController)
             Spacer(Modifier.height(10.dp))
-            TarjetaPersonal("Informacion personal", navController,peso, altura, nombre)
+            TarjetaPersonal("Informacion personal", navController)
+
+            Spacer(Modifier.height(80.dp))
+
+            //Boton de cierre de sesion
+            Button(
+                onClick = {
+                    if(isConnectedToNetwork(context)) {
+                        userController.cerrarSesion({ sucess, error ->
+                            if (sucess) {
+                                //Si el cierre de sesion es correcto, navega al login
+                                navController.navigate(Rutas.LoginScreen.ruta)
+                            } else {
+                                //En caso contrario, mostramos el mensaje de error
+                                Toast.makeText(context,error,Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                    }else{
+                        Toast.makeText(context,"Esta accion requiere conexion a Internet", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            ) {
+                Text(
+                    text = "Cerrar sesion",
+                    fontWeight = FontWeight.ExtraBold
+                )
+            }
         }
     }
 }
 
 
 @Composable
-fun TarjetaPersonal(titulo: String,navController: NavController, peso: Float?, altura: Float?, nombre: String?){
+fun TarjetaPersonal(titulo: String,navController: NavController){
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
             .clickable {
-                if(titulo.equals("Informacion personal")){
-                    navController.navigate(Rutas.InfoPersonalScreen.ruta + "/$peso/$altura/$nombre")
+                if (titulo.equals("Informacion personal")) {
+                    navController.navigate(Rutas.InfoPersonalScreen.ruta) //Navega a la pantalla de info personal
                 }
             },
         colors = CardDefaults.cardColors(

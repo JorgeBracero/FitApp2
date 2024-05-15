@@ -50,6 +50,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.StorageController
+import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.modelos.Alimento
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -60,9 +62,15 @@ import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetallesScreen(navController: NavController, alimentoController: AlimentoController, id: String){
+fun DetallesScreen(
+    navController: NavController,
+    alimentoController: AlimentoController,
+    storeController: StorageController,
+    id: String
+){
     //Recuperamos el alimento asociado a ese id
     var alimento by remember { mutableStateOf<Alimento?>(null) }
+    val context = LocalContext.current
 
     // Lanzamos la carga del alimento al entrar en la pantalla
     LaunchedEffect(Unit) {
@@ -121,13 +129,12 @@ fun DetallesScreen(navController: NavController, alimentoController: AlimentoCon
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceAround
                 ){
-                    mostrarImagen(alimento!!)
+                    storeController.mostrarImagen(context, alimento!!.imgAlimento)
                     Column {
                         Text(text = "Alimento: ${alimento!!.descAlimento}")
                         Text(text = "Marca: ${alimento!!.marcaAlimento}")
                     }
                 }
-
 
                 Text(text = "Categorias", textAlign = TextAlign.Start)
                 //Mostramos cada una de las categorias por separado
@@ -183,55 +190,5 @@ fun DetallesScreen(navController: NavController, alimentoController: AlimentoCon
                 Text(text = "Calorias Totales: ${alimento!!.nutrientes.calorias} cal")
             }
         }
-    }
-}
-
-@Composable
-fun mostrarImagen(alimento: Alimento){
-    var imagenFile: File? = null
-    var imagenDescargada = false
-    descargarImagen(LocalContext.current, alimento!!.imgAlimento, { localFile, exception ->
-        imagenFile = localFile
-        imagenDescargada = true
-    })
-
-    if(imagenDescargada && imagenFile != null) {
-        val bitmap = BitmapFactory.decodeFile(imagenFile!!.absolutePath)
-
-        if(bitmap != null) {
-            val bitmapPainter = bitmap.asImageBitmap()
-
-            Image(
-                bitmap = bitmapPainter,
-                contentDescription = null
-            )
-        }else{
-            Text(text = "No se puede cargar la imagen.")
-        }
-    }
-}
-
-fun descargarImagen(context: Context, fileName: String, callback: (File?, Exception?) -> Unit) {
-    // Crear un archivo local persistente en el directorio de almacenamiento interno de la aplicación
-    val localFile = File(context.filesDir, "${fileName}.jpg")
-    // Verificar si el archivo ya existe localmente
-    if (localFile.exists()) {
-        // Llamar al callback con el archivo local
-        callback(localFile, null)
-    } else {
-        // Si el archivo no existe localmente, descargarlo de Firebase Storage
-        val storageRef = FirebaseStorage.getInstance().reference
-        val audioRef = storageRef.child("images/${fileName}.jpg")
-
-        audioRef.getFile(localFile)
-            .addOnSuccessListener {
-                // Llamar al callback con el archivo local
-                callback(localFile, null)
-            }
-            .addOnFailureListener { exception ->
-                // Manejar errores de descarga llamando al callback con la excepción
-                println("Fallida ${fileName}")
-                callback(null, exception)
-            }
     }
 }
