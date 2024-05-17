@@ -1,10 +1,15 @@
 package com.example.fitapp2.controladores
 
+import android.annotation.SuppressLint
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,18 +33,8 @@ class StorageController {
     @Composable
     fun subirImagen(
         alimento: Alimento,
-        email: String,
-        alimentoController: AlimentoController,
-        regAlimentoController: RegAlimentoController
+        alimentoController: AlimentoController
     ) {
-        /*var alimentoGuardado = true
-        regAlimentoController.alimentoConsumido(alimento,email, { alimentoConsumido ->
-            if(!alimentoConsumido){
-                alimentoGuardado = false
-            }
-        })*/
-
-        //if(!alimentoGuardado) { //Si el alimento no ha sido consumido
             //Sube la imagen al storage, sino no hace nada
             LaunchedEffect(alimento.imgAlimento) {
                 withContext(Dispatchers.IO) {
@@ -70,10 +65,39 @@ class StorageController {
                     }
                 }
             }
-        //}
     }
 
-    fun borrarImagen(alimento: Alimento, email: String, regAlimentoController: RegAlimentoController){
+    //Subir imagen de la galeria a Storage
+    fun subirImagenGaleria(context: Context,uri: Uri, fileName: String, onSuccess: (String) -> Unit) {
+        val imagesRef = storeRef.child("images/$fileName.jpg")
+        val uploadTask = imagesRef.putFile(uri)
+
+        uploadTask.addOnSuccessListener { taskSnapshot ->
+            taskSnapshot.metadata?.reference?.downloadUrl?.addOnSuccessListener { uri ->
+                onSuccess(uri.toString())
+            }
+        }.addOnFailureListener { exception ->
+            Toast.makeText(context, "Upload failed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    //Extrae el nombre de la foto seleccionada en la galeria
+    fun getFileName(contentResolver: ContentResolver, uri: Uri): String? {
+        var fileName: String? = null
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val index = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if(index >= 0) {
+                    fileName = it.getString(index)
+                }
+            }
+        }
+        return fileName
+    }
+
+    fun borrarImagenAlimento(alimento: Alimento, email: String, regAlimentoController: RegAlimentoController){
         regAlimentoController.alimentoConsumido(alimento, email, { alimentoConsumido ->
             if (!alimentoConsumido) { //Si es un alimento, que no ha sido consumido por otro usuario
                 //Podemos borrar la imagen
@@ -92,6 +116,23 @@ class StorageController {
                     }
             }
         })
+    }
+
+    fun borrarImagenPerfil(img: String){
+        if(img != "Predeterminada") { //La imagen predeterminada de perfil no se borra
+            // Referencia al archivo que deseas eliminar
+            val ref = storeRef.child("images/$img.jpg")
+            // Elimina el archivo
+            ref.delete()
+                .addOnSuccessListener {
+                    // La eliminación se realizó con éxito
+                    println("Archivo eliminado exitosamente.")
+                }
+                .addOnFailureListener { exception ->
+                    // Ocurrió un error al intentar eliminar el archivo
+                    println("Error al eliminar el archivo: $exception")
+                }
+        }
     }
 
     fun getBitmapImagen(context: Context, img: String): Bitmap? {
@@ -124,7 +165,7 @@ class StorageController {
                 contentDescription = null
             )
         }else{
-            Text(text = "No se puede cargar la imagen.")
+            CircularProgressIndicator()
         }
     }
 

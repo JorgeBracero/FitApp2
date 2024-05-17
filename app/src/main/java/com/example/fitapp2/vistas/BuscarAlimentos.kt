@@ -373,7 +373,7 @@ fun CardALimento(
 
     //Si la descarga de la imagen ha ido bien, se sigue con el proceso de guardado
     if(imgSubida){
-        storeController.subirImagen(alimento, email!!, alimentoController, regAlimentoController)
+        storeController.subirImagen(alimento, alimentoController)
 
         //Por ultimo subo el registro de ese alimento, compruebo que ya no tenga uno para ese mismo usuario
         val regAlimento = RegAlimento(idAlimento = alimento.idAlimento, email = email!!,momentoDia = momentoDia, cantidad = 1)

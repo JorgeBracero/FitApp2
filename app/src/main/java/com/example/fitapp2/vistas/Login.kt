@@ -341,7 +341,7 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
                                             alturaUser,
                                             txtSexo,
                                             edadUser,
-                                            "predeterminada"
+                                            "Predeterminada"
                                         )
 
                                         println("Altura: $alturaUser")

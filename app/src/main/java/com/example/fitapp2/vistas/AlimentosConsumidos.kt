@@ -394,7 +394,7 @@ fun DiseñoAlimento(
                 regAlimentoController.deleteRegAlimento(alimento,email!!)
 
                 //Borrar la imagen del Storage
-                storeController.borrarImagen(alimento,email,regAlimentoController)
+                storeController.borrarImagenAlimento(alimento,email,regAlimentoController)
 
                 //Borrar el alimento
                 alimentoController.deleteAlimento(alimento,email,regAlimentoController)

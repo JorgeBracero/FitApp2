@@ -46,7 +46,7 @@ fun Navigation(
 
         //PERFIL
         composable(route = Rutas.PerfilScreen.ruta){
-            PerfilScreen(navController,userController)
+            PerfilScreen(navController,userController,storeController)
         }
 
         //DATOS INICIALES
