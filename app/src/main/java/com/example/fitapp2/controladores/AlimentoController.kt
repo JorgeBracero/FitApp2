@@ -2,6 +2,7 @@ package com.example.fitapp2.controladores
 
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
+import com.example.fitapp2.controladores.RegAlimentoController
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -22,8 +23,12 @@ class AlimentoController(db: FirebaseDatabase){
     }
 
     //Borra un alimento
-    fun deleteAlimento(alimento: Alimento){
-        refAlimentos.child(alimento.idAlimento).removeValue()
+    fun deleteAlimento(alimento: Alimento, email: String, regAlimentoController: RegAlimentoController){
+        regAlimentoController.alimentoConsumido(alimento, email, { alimentoConsumido ->
+            if(!alimentoConsumido){ //Si el alimento no ha sido consumido por otro usuario, se puede eliminar
+                refAlimentos.child(alimento.idAlimento).removeValue()
+            }
+        })
     }
 
     //Obtiene un alimento a partir de su clave
@@ -93,6 +98,7 @@ class AlimentoController(db: FirebaseDatabase){
     fun getAlimentosDia(
         query: String,
         momentoDia: String,
+        email: String,
         regAlimentoController: RegAlimentoController,
         callback: (List<Alimento>) -> Unit
     ) {
@@ -114,7 +120,8 @@ class AlimentoController(db: FirebaseDatabase){
                                     val regAlimento = reg.getValue(RegAlimento::class.java)
                                     println("Registro alimento ${alimento.idAlimento}: $regAlimento")
                                     regAlimento?.let {
-                                        if (regAlimento.idAlimento.equals(alimento.idAlimento) && regAlimento.momentoDia.equals(momentoDia)) {
+                                        if (regAlimento.idAlimento == alimento.idAlimento &&
+                                                regAlimento.momentoDia == momentoDia && regAlimento.email == email) {
                                             println("Alimento encontrado: $alimento")
                                             alimentosTemp.add(alimento)
                                             println("Lista alimentos actual: $alimentosTemp")

@@ -9,6 +9,9 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import com.example.fitapp2.modelos.Usuario
+import java.net.MalformedURLException
+import java.net.URL
+import java.time.LocalDate
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
@@ -29,6 +32,11 @@ fun isConnectedToNetwork(context: Context): Boolean {
     }
 }
 
+//Obtener la fecha del sistema
+fun obtenerFechaDelSistema(): String {
+    val fechaActual = LocalDate.now()
+    return fechaActual.toString()
+}
 
 //Bloqueamos el boton de retroceso cuando guarde algun alimento
 @Composable
@@ -88,6 +96,16 @@ fun Float.round(decimals: Int): Float {
     return (this * factor).roundToInt() / factor
 }
 
+//Validar una URL
+fun isValidUrl(urlString: String): Boolean {
+    return try {
+        URL(urlString)
+        true
+    } catch (e: MalformedURLException) {
+        false
+    }
+}
+
 //Indice de masa corporal, para saber en que categoria se encuentra esa persona
 fun calcularIMC(usuario: Usuario): Float {
     return (usuario.peso/(usuario.altura * usuario.altura)).round(1)
@@ -121,8 +139,8 @@ fun categoriaIMC(usuario: Usuario): String {
 }
 
 //Calorias diarias que debe tomar una persona para bajar de peso en funcion de su sexo, peso, altura, edad...
-fun calcularCaloriasDiarias(usuario: Usuario): Double {
-    return calcularTMB(usuario) * 1.2 //Damos por hecho que la persona realiza algo de actividad fisica
+fun calcularCaloriasDiarias(usuario: Usuario): Int {
+    return (calcularTMB(usuario) * 1.2).roundToInt() //Damos por hecho que la persona realiza algo de actividad fisica
     //aunque esta no la controlamos en la app
 }
 

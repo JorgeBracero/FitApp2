@@ -81,6 +81,12 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
     }
 
     if(usuarioActual != null) {
+        //Recojo los datos del usuario campo por campo, para mostrarlos asi en el textfield
+        //Y poder modificarlos despues si lo desea
+        txtPeso = usuarioActual!!.peso.toString()
+        txtEdad = usuarioActual!!.edad.toString()
+        txtAltura = usuarioActual!!.altura.toString()
+        nombreUser = usuarioActual!!.nombreUsuario
         sexoUser = usuarioActual!!.sexo
         Scaffold(
             topBar = {
@@ -114,16 +120,16 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Field(label = "Email", usuarioActual!!)
+                FieldEmail(usuarioActual!!.email)
                 Spacer(modifier = Modifier.height(15.dp))
 
-                txtPeso = Field(label = "Peso", usuarioActual!!)
+                Field(label = "Peso", valor = txtPeso, onChange = {txtPeso = it})
                 Spacer(modifier = Modifier.height(15.dp))
 
-                txtAltura = Field(label = "Altura", usuarioActual!!)
+                Field(label = "Altura", valor = txtAltura, onChange = {txtAltura = it})
                 Spacer(modifier = Modifier.height(15.dp))
 
-                txtEdad = Field(label = "Edad", usuarioActual!!)
+                Field(label = "Edad", valor = txtEdad, onChange = {txtEdad = it})
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Text(
@@ -136,7 +142,7 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
                     showPanelSexo = true
                 })
                 Spacer(modifier = Modifier.height(15.dp))
-                nombreUser = Field(label = "Nombre de usuario", usuarioActual!!)
+                Field(label = "Nombre de usuario", valor = nombreUser, onChange = {nombreUser = it})
 
                 //Panel sexo
                 if (showPanelSexo) {
@@ -202,22 +208,7 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
 }
 
 @Composable
-fun Field(label: String, usuario: Usuario): String {
-    var text by rememberSaveable { mutableStateOf(usuario.nombreUsuario) }
-    when(label){
-        "Peso" ->
-            text = usuario.peso.toString()
-
-        "Altura" ->
-            text = usuario.altura.toString()
-
-        "Edad" ->
-            text = usuario.edad.toString()
-
-        "Email" ->
-            text = usuario.email
-    }
-
+fun Field(label: String, valor: String, onChange: (String) -> Unit) {
     var teclado = KeyboardOptions.Default
 
     if(label == "Peso" || label == "Altura" || label == "Edad"){
@@ -228,15 +219,21 @@ fun Field(label: String, usuario: Usuario): String {
     }
 
     OutlinedTextField(
-        value = text,
-        onValueChange = {
-            text = it
-        },
+        value = valor,
+        onValueChange = onChange,
         label = { Text(text = label) },
-        keyboardOptions = teclado,
-        readOnly = if(text.contains("@")) true else false //El email no se puede modificar
+        keyboardOptions = teclado
     )
-    return text
+}
+
+@Composable
+fun FieldEmail(email: String) {
+    OutlinedTextField(
+        value = email,
+        onValueChange = {},
+        label = { Text(text = "Email") },
+        readOnly = true //El email no se puede modificar
+    )
 }
 
 @Composable

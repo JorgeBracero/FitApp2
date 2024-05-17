@@ -67,6 +67,7 @@ import com.example.fitapp2.R
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
+import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
@@ -84,9 +85,11 @@ fun AlimentosConsumidosScreen(
     momentoDia: String,
     alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
-    storeController: StorageController
+    storeController: StorageController,
+    userController: UsuarioController
 ){
     var query by rememberSaveable { mutableStateOf("") }
+    val email = userController.getAuth().currentUser!!.email
     var showClear by rememberSaveable { mutableStateOf(false) }
     var alimentos by rememberSaveable { mutableStateOf<List<Alimento>>(emptyList()) }
     Column(
@@ -154,7 +157,7 @@ fun AlimentosConsumidosScreen(
         LaunchedEffect(query) {
             if(query.isNotEmpty()) {
                 println(query)
-                alimentoController.getAlimentosDia(query, momentoDia, regAlimentoController, { alimentosBuscados ->
+                alimentoController.getAlimentosDia(query, momentoDia, email!!, regAlimentoController, { alimentosBuscados ->
                     alimentos = alimentosBuscados
                 })
             }
@@ -180,7 +183,8 @@ fun AlimentosConsumidosScreen(
                             momentoDia,
                             alimentoController,
                             regAlimentoController,
-                            storeController
+                            storeController,
+                            userController
                         )
                         Divider()
                     }
@@ -200,19 +204,23 @@ fun DiseñoAlimento(
     momentoDia: String,
     alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
-    storeController: StorageController
+    storeController: StorageController,
+    userController: UsuarioController
 ) {
     var cantidad by rememberSaveable { mutableStateOf(1) }
+    val email = userController.getAuth().currentUser!!.email
     var cantidadObtenida by rememberSaveable { mutableStateOf(false) }
     var opacidad by rememberSaveable { mutableStateOf(1f) }
     var isHolding by rememberSaveable { mutableStateOf(false) }
     var borrarAlimento by rememberSaveable { mutableStateOf(false) }
     var actMomentoDia by rememberSaveable { mutableStateOf(false) }
     var icon by remember { mutableStateOf(Icons.Default.KeyboardArrowDown) }
-    regAlimentoController.obtenerCantidadAlimentoBD(alimento, { cantidadBD ->
-        println("Cantidad antes de la asignacion: $cantidadBD")
-        cantidad = cantidadBD
-        cantidadObtenida = true
+    regAlimentoController.obtenerCantidadAlimentoBD(alimento, email!!, { cantidadBD ->
+        if(cantidadBD != -1) {
+            println("Cantidad antes de la asignacion: $cantidadBD")
+            cantidad = cantidadBD
+            cantidadObtenida = true
+        }
     })
 
     //Aseguramos de que el valor de cantidad cambia en la BD
@@ -256,7 +264,7 @@ fun DiseñoAlimento(
                             cantidad--
 
                             //Update en la BD
-                            regAlimentoController.actualizarCantidadBD(alimento, cantidad)
+                            regAlimentoController.actualizarCantidadBD(alimento, email,cantidad)
                         }
                     },
                     modifier = Modifier.graphicsLayer(alpha = opacidad),
@@ -299,7 +307,7 @@ fun DiseñoAlimento(
                         cantidad++
 
                         //Update en la BD
-                        regAlimentoController.actualizarCantidadBD(alimento, cantidad)
+                        regAlimentoController.actualizarCantidadBD(alimento, email,cantidad)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.DarkGray
@@ -368,7 +376,7 @@ fun DiseñoAlimento(
         }
 
         if(actMomentoDia){
-            panelMomentoDia(navController,momentoDia,alimento, regAlimentoController,{actMomentoDia = false},{icon = Icons.Default.KeyboardArrowDown})
+            panelMomentoDia(navController,momentoDia,email,alimento, regAlimentoController,{actMomentoDia = false},{icon = Icons.Default.KeyboardArrowDown})
         }
 
 
@@ -378,14 +386,14 @@ fun DiseñoAlimento(
                 //Borramos tanto el registro como la imagen del storage, del alimento correspondiente primero
                 //Luego borramos el alimento de la BD, y actualizamos la interfaz y la lista de alimentos
 
-                //Borrar el registro  del alimento
-                regAlimentoController.deleteRegAlimento(alimento)
+                //Borrar el registro  del alimento para el usuarioActual
+                regAlimentoController.deleteRegAlimento(alimento,email!!)
 
                 //Borrar la imagen del Storage
-                storeController.borrarImagen(alimento)
+                storeController.borrarImagen(alimento,email,regAlimentoController)
 
                 //Borrar el alimento
-                alimentoController.deleteAlimento(alimento)
+                alimentoController.deleteAlimento(alimento,email,regAlimentoController)
 
                 //Cerrar el dialogo
                 borrarAlimento = false
@@ -398,7 +406,7 @@ fun DiseñoAlimento(
 }
 
 @Composable
-private fun panelMomentoDia(navController: NavController,momentoDia: String, alimento: Alimento, regAlimentoController: RegAlimentoController, onDismiss: () -> Unit, cambiarIcono: () -> Unit){
+private fun panelMomentoDia(navController: NavController,momentoDia: String, email: String, alimento: Alimento, regAlimentoController: RegAlimentoController, onDismiss: () -> Unit, cambiarIcono: () -> Unit){
     var selectedItem by rememberSaveable { mutableStateOf(0) }
     var items: List<String> = emptyList()
     if(momentoDia == "Desayuno"){
@@ -427,7 +435,7 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ali
                             .clickable {
                                 selectedItem = items.indexOf(item)
                                 if(items[selectedItem] != momentoDia) {
-                                    regAlimentoController.actualizarMomentoDiaBD(alimento, items[selectedItem]) //Actualizamos en la base de datos
+                                    regAlimentoController.actualizarMomentoDiaBD(alimento, email,items[selectedItem]) //Actualizamos en la base de datos
                                 }
                                 cambiarIcono()
                                 onDismiss() //Cerramos el dialog
@@ -443,7 +451,7 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ali
                                 selectedItem = items.indexOf(item)
                                 //Actualizamos si modifica el momento del dia
                                 if(items[selectedItem] != momentoDia) {
-                                    regAlimentoController.actualizarMomentoDiaBD(alimento, items[selectedItem]) //Actualizamos en la base de datos
+                                    regAlimentoController.actualizarMomentoDiaBD(alimento, email,items[selectedItem]) //Actualizamos en la base de datos
                                 }
                                 cambiarIcono()
                                 onDismiss() //Cerramos el dialog

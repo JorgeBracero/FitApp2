@@ -368,7 +368,7 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
                             userController.login(txtEmail, txtPassword) { success, error ->
                                 if (success) {
                                     // Login exitoso
-                                    navController.navigate(Rutas.PrincipalScreen.ruta + "/50/2/piter")
+                                    navController.navigate(Rutas.PrincipalScreen.ruta)
                                 } else {
                                     // Error en el login, muestra el mensaje de error
                                     Toast.makeText(context, error, Toast.LENGTH_SHORT).show()

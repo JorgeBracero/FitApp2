@@ -80,8 +80,10 @@ import androidx.navigation.NavDeepLinkRequest
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
+import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.metodos.BloquearBotonRetroceso
 import com.example.fitapp2.metodos.isConnectedToNetwork
+import com.example.fitapp2.metodos.isValidUrl
 import com.example.fitapp2.modelos.Rutas
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -99,7 +101,8 @@ fun BuscarScreen(
     momentoDia: String,
     alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
-    storeController: StorageController
+    storeController: StorageController,
+    userController: UsuarioController
 ){
     var query by rememberSaveable { mutableStateOf("") }
     var showClear by rememberSaveable { mutableStateOf(false) }
@@ -202,7 +205,7 @@ fun BuscarScreen(
                         val alimentoCorrecto = alimento != null && alimento.imgAlimento != null &&
                                 alimento.imgAlimento.isNotEmpty() && alimento.descAlimento != null &&
                                 alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
-                                alimento.marcaAlimento.isNotEmpty()
+                                alimento.marcaAlimento.isNotEmpty() && isValidUrl(alimento.imgAlimento)
 
                         if(alimentoCorrecto){
                             CardALimento(
@@ -212,6 +215,7 @@ fun BuscarScreen(
                                 alimentoController,
                                 regAlimentoController,
                                 storeController,
+                                userController,
                                 conexion
                             ) //Creamos un card para cada uno
                         }
@@ -291,9 +295,11 @@ fun CardALimento(
     alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
     storeController: StorageController,
+    userController: UsuarioController,
     conexion: Boolean
 ){
     var imgSubida by rememberSaveable { mutableStateOf(false) }
+    val email = userController.getAuth().currentUser!!.email
     var alimentoGuardado by rememberSaveable { mutableStateOf(false) }
     var botonBloqueado by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -367,11 +373,15 @@ fun CardALimento(
 
     //Si la descarga de la imagen ha ido bien, se sigue con el proceso de guardado
     if(imgSubida){
-        storeController.subirImagen(alimento, alimentoController)
+        storeController.subirImagen(alimento, email!!, alimentoController, regAlimentoController)
 
-        //Por ultimo subo el registro de ese alimento
-        val regAlimento = RegAlimento(alimento.idAlimento, momentoDia,1)
-        regAlimentoController.addRegAlimento(alimento, regAlimento)
+        //Por ultimo subo el registro de ese alimento, compruebo que ya no tenga uno para ese mismo usuario
+        val regAlimento = RegAlimento(idAlimento = alimento.idAlimento, email = email!!,momentoDia = momentoDia, cantidad = 1)
+        regAlimentoController.alimentoConsumidoUsuario(alimento,email, {alimentoConsumido ->
+            if(!alimentoConsumido){ //Si el alimento no ha sido consumido por el usuario, lo añadimos
+                regAlimentoController.addRegAlimento(regAlimento)
+            }
+        })
     }
 }
 

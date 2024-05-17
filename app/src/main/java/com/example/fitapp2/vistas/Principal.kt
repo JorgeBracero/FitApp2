@@ -38,13 +38,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.R
+import com.example.fitapp2.controladores.RegAlimentoController
+import com.example.fitapp2.controladores.UsuarioController
+import com.example.fitapp2.metodos.calcularCaloriasDiarias
+import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, nombre: String?){
+fun PrincipalScreen(
+    navController: NavController,
+    regAlimentoController: RegAlimentoController,
+    userController: UsuarioController
+){
     val context = LocalContext.current
+    val uid = userController.getAuth().currentUser!!.uid
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,7 +79,9 @@ fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, 
                         contentDescription = "Busqueda",
                         tint = Color.White,
                         modifier = Modifier.clickable {
-
+                            //Añade un registro alimento
+                            val regAlimento = RegAlimento(idAlimento = "idalimento", email = "email",momentoDia = "jueves", cantidad = 1)
+                            regAlimentoController.addRegAlimento(regAlimento)
                         }
                     )
                 }
@@ -148,19 +159,22 @@ fun PrincipalScreen(navController: NavController, peso: Float?, altura: Float?, 
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Aquí puedes colocar el contenido principal de tu pantalla
-            Text(text = context.getString(R.string.txtCaloriasRes) + "\t\t\t0")
+            var caloriasDiarias = 0
+            userController.obtenerDatosUsuario(uid, { userBD ->
+                if(userBD.uid.isNotEmpty()){
+                    caloriasDiarias = calcularCaloriasDiarias(userBD)
+                    println("Calorias Diarias: $caloriasDiarias")
+                }else{
+                    println("TODO MAL")
+                }
+            })
+
+            Text(text = context.getString(R.string.txtCaloriasRes) + "\t\t\t$caloriasDiarias")
             Text(text = context.getString(R.string.txtCaloriasCon) + "\t\t\t0")
             Spacer(modifier = Modifier.height(10.dp))
             TarjetaDia(context.getString(R.string.txtDesayuno), R.drawable.desayuno,navController)
             TarjetaDia(context.getString(R.string.txtAlmuerzo), R.drawable.almuerzo,navController)
             TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena,navController)
-            Spacer(modifier = Modifier.height(20.dp))
-
-            if(peso != null && altura != null && nombre != null){
-                Text(text = "Usuario: $nombre")
-                Text(text = "Peso: $peso kg")
-                Text(text = "Altura: $altura m")
-            }
         }
     }
 }

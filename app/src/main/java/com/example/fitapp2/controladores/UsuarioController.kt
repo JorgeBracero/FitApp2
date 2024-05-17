@@ -125,6 +125,9 @@ class UsuarioController(db: FirebaseDatabase){
                             usuarioExiste = true //Se ha encontrado el correo asociado
                             return@forEach //Sale del bucle una vez lo hemos encontrado
                         }
+
+                        //Eliminar el listener
+                        refUsuarios.removeEventListener(this)
                     }
                 }
 

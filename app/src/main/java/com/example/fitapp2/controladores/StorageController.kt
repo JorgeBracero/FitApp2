@@ -3,12 +3,14 @@ package com.example.fitapp2.controladores
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import com.example.fitapp2.metodos.isValidUrl
 import com.example.fitapp2.modelos.Alimento
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -16,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
+import java.net.MalformedURLException
 import java.net.URL
 
 class StorageController {
@@ -23,41 +26,72 @@ class StorageController {
 
     //Subir Imagen de los productos guardados a storage
     @Composable
-    fun subirImagen(alimento: Alimento, alimentoController: AlimentoController) {
-        LaunchedEffect(alimento.imgAlimento) {
-            withContext(Dispatchers.IO) {
-                val refStore = storeRef.child("images").child("${alimento.descAlimento}.jpg")
-                val descImg: InputStream = URL(alimento.imgAlimento).openStream()
+    fun subirImagen(
+        alimento: Alimento,
+        email: String,
+        alimentoController: AlimentoController,
+        regAlimentoController: RegAlimentoController
+    ) {
+        /*var alimentoGuardado = true
+        regAlimentoController.alimentoConsumido(alimento,email, { alimentoConsumido ->
+            if(!alimentoConsumido){
+                alimentoGuardado = false
+            }
+        })*/
 
-                // Subo la imagen
-                refStore.putStream(descImg).addOnSuccessListener {
-                    println("La imagen se subió con éxito")
-                    // Como campo al alimento le añadimos la URL
-                    alimento.imgAlimento = alimento.descAlimento
+        //if(!alimentoGuardado) { //Si el alimento no ha sido consumido
+            //Sube la imagen al storage, sino no hace nada
+            LaunchedEffect(alimento.imgAlimento) {
+                withContext(Dispatchers.IO) {
+                    val refStore = storeRef.child("images").child("${alimento.descAlimento}.jpg")
 
-                    //Guardo el alimento seleccionado y su registro en la db, a partir de mi ref
-                    alimentoController.addAlimento(alimento)
-                }.addOnFailureListener { exception ->
-                    println("Error al subir la imagen del producto: ${alimento.descAlimento}\n$exception")
+                    //Comprobamos que la url sea valida, si lo es seguimos adelante
+                    if (isValidUrl(alimento.imgAlimento)) {
+                        val url = URL(alimento.imgAlimento)
+                        val descImg: InputStream = url.openStream()
+
+                        // Subo la imagen
+                        refStore.putStream(descImg).addOnSuccessListener {
+                            println("La imagen se subió con éxito")
+                            // Como campo al alimento le añadimos la URL
+                            alimento.imgAlimento = alimento.descAlimento
+
+                            //Guardo el alimento seleccionado y su registro en la db, a partir de mi ref
+                            alimentoController.obtenerAlimento(alimento.idAlimento, { alimentoBD ->
+                                if (alimentoBD.idAlimento.isEmpty()) { //Si el alimento que intento añadir no existe, lo guardo
+                                    alimentoController.addAlimento(alimento)
+                                }
+                            })
+                        }.addOnFailureListener { exception ->
+                            println("Error al subir la imagen del producto: ${alimento.descAlimento}\n$exception")
+                        }
+                    }else{
+                        println("la url de la imagen no es valida")
+                    }
                 }
             }
-        }
+        //}
     }
 
-    fun borrarImagen(alimento: Alimento){
-        // Referencia al archivo que deseas eliminar
-        val ref = storeRef.child("images/${alimento.imgAlimento}.jpg")
+    fun borrarImagen(alimento: Alimento, email: String, regAlimentoController: RegAlimentoController){
+        regAlimentoController.alimentoConsumido(alimento, email, { alimentoConsumido ->
+            if (!alimentoConsumido) { //Si es un alimento, que no ha sido consumido por otro usuario
+                //Podemos borrar la imagen
+                // Referencia al archivo que deseas eliminar
+                val ref = storeRef.child("images/${alimento.imgAlimento}.jpg")
 
-        // Elimina el archivo
-        ref.delete()
-            .addOnSuccessListener {
-                // La eliminación se realizó con éxito
-                println("Archivo eliminado exitosamente.")
+                // Elimina el archivo
+                ref.delete()
+                    .addOnSuccessListener {
+                        // La eliminación se realizó con éxito
+                        println("Archivo eliminado exitosamente.")
+                    }
+                    .addOnFailureListener { exception ->
+                        // Ocurrió un error al intentar eliminar el archivo
+                        println("Error al eliminar el archivo: $exception")
+                    }
             }
-            .addOnFailureListener { exception ->
-                // Ocurrió un error al intentar eliminar el archivo
-                println("Error al eliminar el archivo: $exception")
-            }
+        })
     }
 
     fun getBitmapImagen(context: Context, img: String): Bitmap? {

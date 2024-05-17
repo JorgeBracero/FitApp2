@@ -42,16 +42,8 @@ fun Navigation(
         }
 
         //INICIO
-        composable(route = Rutas.PrincipalScreen.ruta + "/{peso}/{altura}/{nombre}",
-            arguments = listOf(
-                navArgument(name = "peso"){ type = NavType.FloatType },
-                navArgument(name = "altura"){ type = NavType.FloatType },
-                navArgument(name = "nombre"){ type = NavType.StringType }
-            )){
-            it.arguments?.let { it1 ->
-                PrincipalScreen(navController, it1.getFloat("peso"), it.arguments!!.getFloat("altura"),
-                    it.arguments!!.getString("nombre",""))
-            }
+        composable(route = Rutas.PrincipalScreen.ruta){
+            PrincipalScreen(navController,regAlimentoController,userController)
         }
 
         //PERFIL
@@ -81,7 +73,8 @@ fun Navigation(
                 it1.getString("momentoDia", ""),
                 alimentoController,
                 regAlimentoController,
-                storeController
+                storeController,
+                userController
             ) }
         }
 
@@ -113,7 +106,14 @@ fun Navigation(
             )){
             val momentoDia = it.arguments?.getString("momentoDia")
             momentoDia?.let {
-                AlimentosConsumidosScreen(navController, it,alimentoController,regAlimentoController,storeController)
+                AlimentosConsumidosScreen(
+                    navController,
+                    it,
+                    alimentoController,
+                    regAlimentoController,
+                    storeController,
+                    userController
+                )
             }
         }
 
