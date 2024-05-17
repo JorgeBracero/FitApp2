@@ -349,14 +349,14 @@ fun CardALimento(
                 if(conexion && !alimentoGuardado) {
                     //Boton para guardar el producto en nuestra base de datos en la tabla 'Alimentos'
                     Button(onClick = {
-                        alimentoGuardado = true
                         imgSubida = true //Se puede subir la imagen
+                        /*
                         botonBloqueado = true
                         // Desbloquear el botón después de 5 segundos
                         coroutineScope.launch {
                             delay(5000)
                             botonBloqueado = false
-                        }
+                        }*/
                     }) {
                         Text(text = "Guardar")
                     }
@@ -365,11 +365,11 @@ fun CardALimento(
         }
     }
 
-
+    /*
     if(botonBloqueado){
         // Bloquear el botón de retroceso
         BloquearBotonRetroceso()
-    }
+    }*/
 
     //Si la descarga de la imagen ha ido bien, se sigue con el proceso de guardado
     if(imgSubida){
@@ -377,11 +377,17 @@ fun CardALimento(
 
         //Por ultimo subo el registro de ese alimento, compruebo que ya no tenga uno para ese mismo usuario
         val regAlimento = RegAlimento(idAlimento = alimento.idAlimento, email = email!!,momentoDia = momentoDia, cantidad = 1)
+        println(regAlimento)
         regAlimentoController.alimentoConsumidoUsuario(alimento,email, {alimentoConsumido ->
-            if(!alimentoConsumido){ //Si el alimento no ha sido consumido por el usuario, lo añadimos
+            if(!alimentoConsumido && !alimentoGuardado){ //Si el alimento no ha sido consumido por el usuario, lo añadimos
                 regAlimentoController.addRegAlimento(regAlimento)
+                alimentoGuardado = true
+                println("Añadido correctamente")
             }
         })
+
+        //Navegamos a la pantalla principal
+        navController.navigate(Rutas.PrincipalScreen.ruta)
     }
 }
 

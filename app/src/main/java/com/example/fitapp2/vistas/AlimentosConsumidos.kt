@@ -154,8 +154,12 @@ fun AlimentosConsumidosScreen(
 
 
         //Busqueda de productos, segun el momento del dia
-        LaunchedEffect(query) {
-            if(query.isNotEmpty()) {
+        if(query.isEmpty()){
+            /*alimentoController.getAlimentosDia(query, momentoDia, email!!, regAlimentoController, { alimentosBuscados ->
+                alimentos = alimentosBuscados
+            })*/
+        }else{
+            LaunchedEffect(query) {
                 println(query)
                 alimentoController.getAlimentosDia(query, momentoDia, email!!, regAlimentoController, { alimentosBuscados ->
                     alimentos = alimentosBuscados
@@ -399,7 +403,7 @@ fun DiseñoAlimento(
                 borrarAlimento = false
 
                 //Navegamos a la pantalla principal
-                navController.navigate(Rutas.PrincipalScreen.ruta + "/50/1/ey")
+                navController.navigate(Rutas.PrincipalScreen.ruta)
             })
         }
     }
@@ -440,7 +444,7 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ema
                                 cambiarIcono()
                                 onDismiss() //Cerramos el dialog
                                 //Navegamos a principal
-                                navController.navigate(Rutas.PrincipalScreen.ruta + "/50/1/ey")
+                                navController.navigate(Rutas.PrincipalScreen.ruta)
                             }
                     ) {
                         Text(text = item)
@@ -456,7 +460,7 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ema
                                 cambiarIcono()
                                 onDismiss() //Cerramos el dialog
                                 //Navegamos a principal
-                                navController.navigate(Rutas.PrincipalScreen.ruta + "/50/1/ey")
+                                navController.navigate(Rutas.PrincipalScreen.ruta)
                             }
                         )
                     }

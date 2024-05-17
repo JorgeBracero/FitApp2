@@ -7,6 +7,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlin.math.roundToInt
 
 class RegAlimentoController(db: FirebaseDatabase){
     private val refRegAl = db.getReference("regAlimentos")
@@ -124,6 +125,43 @@ class RegAlimentoController(db: FirebaseDatabase){
             override fun onCancelled(error: DatabaseError) {
                 println("Error al obtener el alimento: $error")
                 callback(alimentoConsumido)
+            }
+        })
+    }
+
+    //Metodo para calcular las calorias consumidas por una persona
+    fun calcularCalorias(email: String, alimentoController: AlimentoController, callback: (Int) -> Unit) {
+        var caloriasTotales = 0
+        val query = refRegAl.orderByChild("email").equalTo(email)
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    // Hay resultados en la consulta
+                    //Recorremos todos los usuarios, y comprobamos si alguno ha consumido el alimento en cuestion
+                    //En caso de que ningun otro usuario haya consumido este alimento, si se puede borrar
+                    snapshot.children.forEach { child ->
+                        val regAlimento = child.getValue(RegAlimento::class.java)
+                        if (regAlimento != null) {
+                            alimentoController.obtenerAlimento(regAlimento.idAlimento, { alimentoBD ->
+                                if(alimentoBD != null){
+                                    //Almacenamos las calorias de cada uno de los alimentos que haya consumido
+                                    //Las redondeamos a 0 decimales
+                                    println("entre PELOTUDOOOOOOOOOOO")
+                                    caloriasTotales = caloriasTotales + (alimentoBD.nutrientes.calorias).roundToInt()
+                                    println("Calorias Totales: $caloriasTotales")
+                                }
+                            })
+                        }
+                    }
+                }
+
+                //Llamamos al callback
+                callback(caloriasTotales)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error al obtener el alimento: $error")
+                callback(-1)
             }
         })
     }

@@ -350,7 +350,7 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
                                         println("Usuario: $usuario")
 
                                         userController.addOrUpdUsuario(usuario)
-                                        navController.navigate(Rutas.PrincipalScreen.ruta + "/$pesoUser/$alturaUser/$nombreUser")
+                                        navController.navigate(Rutas.PrincipalScreen.ruta)
                                     } else {
                                         //Si estos datos no son correctos
                                         Toast.makeText(

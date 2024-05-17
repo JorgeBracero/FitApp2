@@ -112,6 +112,7 @@ class UsuarioController(db: FirebaseDatabase){
             }
     }
 
+
     //Metodo para comprobar que el correo dado corresponde a un usuario autenticado en mi aplicacion
     fun usuarioExiste(email: String, callback: (Boolean) -> Unit){
         var usuarioExiste = false

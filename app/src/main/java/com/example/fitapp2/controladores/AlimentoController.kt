@@ -132,10 +132,16 @@ class AlimentoController(db: FirebaseDatabase){
 
                                 println("Alimentos temp fuera de change: $alimentosTemp")
                                 // Filtramos los alimentos por la búsqueda
-                                val alimentosBuscados = alimentosTemp.filter {
+                                var alimentosBuscados = alimentosTemp.filter {
                                     it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
                                             it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
                                 }
+
+                                /*
+                                //Al cargar la pantalla, queremos mostrar todos los alimentos que tenga
+                                if(query.isEmpty()){
+                                    alimentosBuscados = alimentosTemp
+                                }*/
 
                                 println("Alimentos Buscados: $alimentosBuscados")
 

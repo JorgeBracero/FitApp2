@@ -8,6 +8,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.modelos.Usuario
 import java.net.MalformedURLException
 import java.net.URL
@@ -140,8 +142,20 @@ fun categoriaIMC(usuario: Usuario): String {
 
 //Calorias diarias que debe tomar una persona para bajar de peso en funcion de su sexo, peso, altura, edad...
 fun calcularCaloriasDiarias(usuario: Usuario): Int {
-    return (calcularTMB(usuario) * 1.2).roundToInt() //Damos por hecho que la persona realiza algo de actividad fisica
+    return (calcularTMB(usuario) * 1.2).roundToInt() //Damos por hecho que la persona realiza algo de actividad fisica, pero con poca frecuencia
     //aunque esta no la controlamos en la app
+}
+
+//Calorias diarias consumidas de una persona
+fun calcularCaloriasDiariasConsumidas(
+    usuario: Usuario,
+    regAlimentoController: RegAlimentoController,
+    alimentoController: AlimentoController,
+    callback: (Int) -> Unit
+) {
+    regAlimentoController.calcularCalorias(usuario.email, alimentoController, { calorias ->
+        callback(calorias)
+    })
 }
 
 

@@ -1,7 +1,6 @@
 package com.example.fitapp2.modelos
 
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavArgument
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,7 +10,6 @@ import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.controladores.UsuarioController
-import com.example.fitapp2.vistas.AjustesScreen
 import com.example.fitapp2.vistas.AlimentosConsumidosScreen
 import com.example.fitapp2.vistas.BuscarScreen
 import com.example.fitapp2.vistas.DatosInicialesScreen
@@ -20,8 +18,8 @@ import com.example.fitapp2.vistas.InfoPersonalScreen
 import com.example.fitapp2.vistas.LoginScreen
 import com.example.fitapp2.vistas.PasswordScreen
 import com.example.fitapp2.vistas.PerfilScreen
+import com.example.fitapp2.vistas.PesoScreen
 import com.example.fitapp2.vistas.PrincipalScreen
-import com.google.firebase.database.DatabaseReference
 
 //Gestor de navegacion entre las pantallas de la app
 @Composable
@@ -43,7 +41,7 @@ fun Navigation(
 
         //INICIO
         composable(route = Rutas.PrincipalScreen.ruta){
-            PrincipalScreen(navController,regAlimentoController,userController)
+            PrincipalScreen(navController,alimentoController,regAlimentoController,userController)
         }
 
         //PERFIL
@@ -118,8 +116,8 @@ fun Navigation(
         }
 
         //AJUSTES DE CUENTA
-        composable(route = Rutas.AjustesScreen.ruta){
-            AjustesScreen(navController, userController)
+        composable(route = Rutas.PesoScreen.ruta){
+            PesoScreen(navController, userController)
         }
 
         //RESTABLECER CONTRASEÑA

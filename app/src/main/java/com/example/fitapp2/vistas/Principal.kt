@@ -30,6 +30,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,17 +43,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.R
+import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.metodos.calcularCaloriasDiarias
+import com.example.fitapp2.metodos.calcularCaloriasDiariasConsumidas
 import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
+import com.example.fitapp2.modelos.Usuario
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrincipalScreen(
     navController: NavController,
+    alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
     userController: UsuarioController
 ){
@@ -159,18 +168,31 @@ fun PrincipalScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Aquí puedes colocar el contenido principal de tu pantalla
-            var caloriasDiarias = 0
-            userController.obtenerDatosUsuario(uid, { userBD ->
-                if(userBD.uid.isNotEmpty()){
-                    caloriasDiarias = calcularCaloriasDiarias(userBD)
-                    println("Calorias Diarias: $caloriasDiarias")
-                }else{
-                    println("TODO MAL")
-                }
-            })
+            var caloriasDiarias by remember { mutableStateOf(0) }
+            var caloriasConsumidas by remember { mutableStateOf(0) }
 
-            Text(text = context.getString(R.string.txtCaloriasRes) + "\t\t\t$caloriasDiarias")
-            Text(text = context.getString(R.string.txtCaloriasCon) + "\t\t\t0")
+            //Obtenemos los datos de la base de datos
+            LaunchedEffect(Unit) {
+                userController.obtenerDatosUsuario(uid, { userBD ->
+                    if (userBD.uid.isNotEmpty()) {
+                        caloriasDiarias = calcularCaloriasDiarias(userBD) //Calculo las calorias diarias
+                        //Calculo las calorias consumidas hasta el momento
+                        calcularCaloriasDiariasConsumidas(userBD,
+                            regAlimentoController, alimentoController, { calorias ->
+                                caloriasConsumidas = calorias
+                            })
+                        println("Calorias Diarias: $caloriasDiarias")
+                        println("Calorias Consumidas: $caloriasConsumidas")
+                    }
+                })
+            }
+
+            if(caloriasDiarias != 0) {
+                Text(text = context.getString(R.string.txtCaloriasRes) + "\t\t\t$caloriasDiarias")
+            }
+            if(caloriasConsumidas != -1) {
+                Text(text = context.getString(R.string.txtCaloriasCon) + "\t\t\t$caloriasConsumidas")
+            }
             Spacer(modifier = Modifier.height(10.dp))
             TarjetaDia(context.getString(R.string.txtDesayuno), R.drawable.desayuno,navController)
             TarjetaDia(context.getString(R.string.txtAlmuerzo), R.drawable.almuerzo,navController)

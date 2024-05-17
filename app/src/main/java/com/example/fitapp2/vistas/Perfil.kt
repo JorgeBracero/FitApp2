@@ -125,7 +125,7 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                     .size(45.dp)
                                     .clickable {
                                         //Navega a la pantalla principal
-                                        navController.navigate(route = Rutas.PrincipalScreen.ruta + "/10/1/nombre")
+                                        navController.navigate(route = Rutas.PrincipalScreen.ruta)
                                     }
                             )
                             Text(text = "Inicio")
@@ -237,6 +237,8 @@ fun TarjetaPersonal(titulo: String,navController: NavController){
             .clickable {
                 if (titulo.equals("Informacion personal")) {
                     navController.navigate(Rutas.InfoPersonalScreen.ruta) //Navega a la pantalla de info personal
+                }else{
+                    navController.navigate(Rutas.PesoScreen.ruta) //Navega a la pantalla de Mi Peso
                 }
             },
         colors = CardDefaults.cardColors(
