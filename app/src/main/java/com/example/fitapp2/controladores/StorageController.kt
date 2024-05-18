@@ -9,12 +9,19 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.example.fitapp2.metodos.isValidUrl
 import com.example.fitapp2.modelos.Alimento
 import com.google.firebase.storage.FirebaseStorage
@@ -118,6 +125,7 @@ class StorageController {
         })
     }
 
+    /*
     fun borrarImagenPerfil(img: String){
         if(img != "Predeterminada") { //La imagen predeterminada de perfil no se borra
             // Referencia al archivo que deseas eliminar
@@ -134,6 +142,7 @@ class StorageController {
                 }
         }
     }
+    */
 
     fun getBitmapImagen(context: Context, img: String): Bitmap? {
         var imagenFile: File? = null
@@ -154,7 +163,7 @@ class StorageController {
 
     //Mostrar imagen Storage
     @Composable
-    fun mostrarImagen(context: Context,img: String){
+    fun mostrarImagen(context: Context,img: String, size: Dp){
         val bitmap = getBitmapImagen(context,img)
 
         if(bitmap != null) {
@@ -162,7 +171,10 @@ class StorageController {
 
             Image(
                 bitmap = bitmapPainter,
-                contentDescription = null
+                contentDescription = null,
+                modifier = Modifier.size(size)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
         }else{
             CircularProgressIndicator()

@@ -129,7 +129,7 @@ fun DetallesScreen(
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceAround
                 ){
-                    storeController.mostrarImagen(context, alimento!!.imgAlimento)
+                    storeController.mostrarImagen(context, alimento!!.imgAlimento, 200.dp)
                     Column {
                         Text(text = "Alimento: ${alimento!!.descAlimento}")
                         Text(text = "Marca: ${alimento!!.marcaAlimento}")

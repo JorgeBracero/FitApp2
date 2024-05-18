@@ -1,19 +1,16 @@
 package com.example.fitapp2.vistas
 
-import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -72,11 +69,12 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
     val context = LocalContext.current
     val idUser by remember { mutableStateOf (userController.getAuth().currentUser!!.uid)}
     var usuarioActual by remember { mutableStateOf<Usuario?>(null) }
-    var showPanelFoto by remember { mutableStateOf(false) }
+    var showGaleria by remember { mutableStateOf(false) }
 
     //Galeria variables
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var uploadedImageUrl by remember { mutableStateOf<String?>(null) }
+
 
     if(idUser != null){
         //Obtenemos los datos del usuario actual
@@ -88,6 +86,26 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
     }
 
     if(usuarioActual != null) {
+
+        //Obtener imagen del usuario
+        val getImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                selectedImageUri = it
+                val fileName = storeController.getFileName(context.contentResolver, it)
+                val nombreImg = fileName!!.substring(0, fileName!!.lastIndexOf('.'))
+
+                //Borramos la imagen anterior que tuviese, a menos que sea la predeterminada
+                //Actualizamos el campo foto perfil del usuario con el nuevo nombre de la imagen
+                userController.updFotoPerfil(usuarioActual!!, nombreImg!!)
+
+                nombreImg?.let { name ->
+                    storeController.subirImagenGaleria(context,it, name) { url ->
+                        uploadedImageUrl = url
+                    }
+                }
+            }
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -102,24 +120,23 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                     },
                     navigationIcon = {
                         //Descargamos la imagen del usuario actual y la mostramos
-                        storeController.mostrarImagen(context, usuarioActual!!.fotoPerfil)
+                        storeController.mostrarImagen(context, usuarioActual!!.fotoPerfil, 55.dp)
                     },
                     colors = TopAppBarDefaults.smallTopAppBarColors(
                         containerColor = Color.Black,
                         titleContentColor = Color.White
                     ),
                     actions = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Text(text = context.getString(R.string.txtConfiguracion))
-                            Spacer(modifier = Modifier.width(10.dp))
+                        if(showGaleria) {
                             Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Ajustes de la cuenta",
+                                painter = painterResource(id = R.drawable.baseline_photo_24),
+                                contentDescription = "Galeria",
                                 tint = Color.White,
-                                modifier = Modifier.size(38.dp)
+                                modifier = Modifier.clickable {
+                                    //Mostramos la galeria
+                                    getImage.launch("image/*")
+                                    showGaleria = false
+                                }.size(45.dp)
                             )
                         }
                     }
@@ -214,7 +231,7 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                         Button(
                             onClick = {
                                 //Boton para editar la foto de perfil al usuario
-                                showPanelFoto = true
+                                showGaleria = true
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Black
@@ -267,37 +284,9 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                     )
                 }
 
-
-                //GALERIA
-                if(showPanelFoto){
-                    //Imagen que selecciona el usuario de la galeria
-                    val getImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-                        uri?.let {
-                            selectedImageUri = it
-                            val fileName = storeController.getFileName(context.contentResolver, it)
-                            val nombreImg = fileName!!.substring(0, fileName!!.lastIndexOf('.'))
-
-                            //Borramos la imagen anterior que tuviese, a menos que sea la predeterminada
-                            //Actualizamos el campo foto perfil del usuario con el nuevo nombre de la imagen
-                            storeController.borrarImagenPerfil(usuarioActual!!.fotoPerfil)
-                            userController.updFotoPerfil(usuarioActual!!, nombreImg!!)
-
-                            nombreImg?.let { name ->
-                                storeController.subirImagenGaleria(context,it, name) { url ->
-                                    uploadedImageUrl = url
-                                }
-                            }
-                        }
-                    }
-
-                    Button(onClick = { getImage.launch("image/*") }) {
-                        Text("Select Image")
-                    }
-
-                    if(selectedImageUri != null){
-                        navController.navigate(Rutas.PrincipalScreen.ruta)
-                    }
-
+                //Si el usuario elige una imagen, navega a la ruta principal
+                if(selectedImageUri != null){
+                    navController.navigate(Rutas.PrincipalScreen.ruta)
                 }
             }
         }

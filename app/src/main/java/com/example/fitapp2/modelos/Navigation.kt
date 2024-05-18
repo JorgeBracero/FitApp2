@@ -36,7 +36,12 @@ fun Navigation(
     ){
         //LOGIN
         composable(route = Rutas.LoginScreen.ruta){
-            LoginScreen(navController,userController)
+            val userActual = userController.getAuth().currentUser //Cogemos el usuario actual
+            if(userActual != null) { //Si ya esta logueado, navega directamente a la pantalla principal
+                PrincipalScreen(navController,alimentoController,regAlimentoController,userController)
+            }else{ //En caso contrario carga la pantalla de logueo
+                LoginScreen(navController, userController)
+            }
         }
 
         //INICIO

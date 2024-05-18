@@ -81,19 +81,7 @@ fun PrincipalScreen(
                 colors = TopAppBarDefaults.smallTopAppBarColors(
                     containerColor = Color.Black,
                     titleContentColor = Color.White
-                ),
-                actions = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Busqueda",
-                        tint = Color.White,
-                        modifier = Modifier.clickable {
-                            //Añade un registro alimento
-                            val regAlimento = RegAlimento(idAlimento = "idalimento", email = "email",momentoDia = "jueves", cantidad = 1)
-                            regAlimentoController.addRegAlimento(regAlimento)
-                        }
-                    )
-                }
+                )
             )
         },
         bottomBar = {

@@ -77,49 +77,49 @@ fun LoginScreen(navController: NavController, userController: UsuarioController)
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     Column(
-        modifier = Modifier
-            .verticalScroll(state = scrollState)
-            .fillMaxSize()
-            .background(Color.Black),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.Bottom
-        ){
-            Idiomas(context)
-        }
-        Text(
-            text = "FitApp",
-            color = Color.White,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = TextUnit(35f,TextUnitType.Sp),
-            style = MaterialTheme.typography.titleLarge
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        //Variables
-        val txtLogin = context.getString(R.string.btLog)
-        val txtInvitado = context.getString(R.string.btInvitado)
-        val idGoogle = R.drawable.logogoogle
-        val idInvitado = R.drawable.invitado
-
-        //Cards
-        LoginCard(context,navController,userController)
-        Spacer(modifier = Modifier.height(10.dp))
-        Tarjeta(txtInvitado,idInvitado,context,navController)
-        Spacer(modifier = Modifier.height(8.dp))
-        Column(
             modifier = Modifier
+                .verticalScroll(state = scrollState)
                 .fillMaxSize()
                 .background(Color.Black),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.End
-        ){
-            Divider()
-            Terminos(context)
-        }
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Idiomas(context)
+            }
+            Text(
+                text = "FitApp",
+                color = Color.White,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = TextUnit(35f, TextUnitType.Sp),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            //Variables
+            val txtLogin = context.getString(R.string.btLog)
+            val txtInvitado = context.getString(R.string.btInvitado)
+            val idGoogle = R.drawable.logogoogle
+            val idInvitado = R.drawable.invitado
+
+            //Cards
+            LoginCard(context, navController, userController)
+            Spacer(modifier = Modifier.height(10.dp))
+            Tarjeta(txtInvitado, idInvitado, context, navController)
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.End
+            ) {
+                Divider()
+                Terminos(context)
+            }
     }
 }
 
