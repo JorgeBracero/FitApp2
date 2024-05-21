@@ -65,7 +65,7 @@ class AlimentoController(db: FirebaseDatabase){
     fun getAlimentosLocal(query: String, callback: (List<Alimento>) -> Unit) {
         val alimentosTemp = mutableListOf<Alimento>()
 
-        refAlimentos.addListenerForSingleValueEvent(object : ValueEventListener {
+        refAlimentos.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 dataSnapshot.children.forEach { data ->
                     val alimento = data.getValue(Alimento::class.java)
@@ -77,6 +77,8 @@ class AlimentoController(db: FirebaseDatabase){
                 // Filtramos los alimentos por la búsqueda
                 val alimentosBuscados = alimentosTemp.filter {
                     it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
+                            it.descAlimento.toLowerCase().contains(query.toLowerCase()) ||
+                            it.marcaAlimento.toLowerCase().contains(query.toLowerCase()) ||
                             it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
                 }
 
@@ -134,6 +136,8 @@ class AlimentoController(db: FirebaseDatabase){
                                 // Filtramos los alimentos por la búsqueda
                                 var alimentosBuscados = alimentosTemp.filter {
                                     it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
+                                            it.descAlimento.toLowerCase().contains(query.toLowerCase()) ||
+                                            it.marcaAlimento.toLowerCase().contains(query.toLowerCase()) ||
                                             it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
                                 }
 

@@ -189,6 +189,9 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                     contentDescription = "Informes",
                                     tint = Color.White,
                                     modifier = Modifier.size(45.dp)
+                                        .clickable {
+                                            navController.navigate(Rutas.InformesScreen.ruta)
+                                        }
                                 )
                                 Text(text = context.getString(R.string.txtInformes))
                             }

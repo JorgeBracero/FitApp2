@@ -129,39 +129,165 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
-    //Metodo para calcular las calorias consumidas por una persona
-    fun calcularCalorias(email: String, alimentoController: AlimentoController, callback: (Int) -> Unit) {
+    // Método para calcular las calorías totales consumidas por una persona
+    fun calcularCaloriasTotales(email: String, alimentoController: AlimentoController, callback: (Int) -> Unit) {
         var caloriasTotales = 0
         val query = refRegAl.orderByChild("email").equalTo(email)
-        query.addListenerForSingleValueEvent(object : ValueEventListener {
+        query.addListenerForSingleValueEvent(object : ValueEventListener { // Cambiamos a addListenerForSingleValueEvent para obtener los datos una vez
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
-                    // Hay resultados en la consulta
-                    //Recorremos todos los usuarios, y comprobamos si alguno ha consumido el alimento en cuestion
-                    //En caso de que ningun otro usuario haya consumido este alimento, si se puede borrar
+                    val childCount = snapshot.childrenCount
+                    var processedCount = 0
+
                     snapshot.children.forEach { child ->
                         val regAlimento = child.getValue(RegAlimento::class.java)
                         if (regAlimento != null) {
-                            alimentoController.obtenerAlimento(regAlimento.idAlimento, { alimentoBD ->
-                                if(alimentoBD != null){
-                                    //Almacenamos las calorias de cada uno de los alimentos que haya consumido
-                                    //Las redondeamos a 0 decimales
-                                    println("entre PELOTUDOOOOOOOOOOO")
-                                    caloriasTotales = caloriasTotales + (alimentoBD.nutrientes.calorias).roundToInt()
-                                    println("Calorias Totales: $caloriasTotales")
+                            alimentoController.obtenerAlimento(regAlimento.idAlimento) { alimentoBD ->
+                                if (alimentoBD != null) {
+                                    // Almacenamos las calorías de cada uno de los alimentos que haya consumido
+                                    // Las redondeamos a 0 decimales
+                                    caloriasTotales += ((alimentoBD.nutrientes.calorias).roundToInt() * regAlimento.cantidad)
                                 }
-                            })
+                                processedCount++
+                                // Verificamos si todos los alimentos han sido procesados
+                                if (processedCount == childCount.toInt()) {
+                                    callback(caloriasTotales)
+                                }
+                            }
+                        } else {
+                            processedCount++
+                            if (processedCount == childCount.toInt()) {
+                                callback(caloriasTotales)
+                            }
                         }
                     }
+                } else {
+                    callback(caloriasTotales)
                 }
-
-                //Llamamos al callback
-                callback(caloriasTotales)
             }
 
             override fun onCancelled(error: DatabaseError) {
                 println("Error al obtener el alimento: $error")
                 callback(-1)
+            }
+        })
+    }
+
+    // Método para calcular todos los alimentos consumidos por una persona
+    fun getNumAlimentosUsuario(email: String, callback: (Int) -> Unit) {
+        var caloriasTotales = 0
+        val query = refRegAl.orderByChild("email").equalTo(email)
+        query.addListenerForSingleValueEvent(object : ValueEventListener { // Cambiamos a addListenerForSingleValueEvent para obtener los datos una vez
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val childCount = snapshot.childrenCount.toInt()
+                    callback(childCount)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error al obtener el alimento: $error")
+                callback(0)
+            }
+        })
+    }
+
+    // Método para calcular los alimentos consumidos por una persona en una fecha
+    fun getNumAlimentosFechaUsuario(email: String, fecha: String, callback: (Int) -> Unit) {
+        var numAlimentos = 0
+        val query = refRegAl.orderByChild("email").equalTo(email)
+        query.addListenerForSingleValueEvent(object : ValueEventListener { // Cambiamos a addListenerForSingleValueEvent para obtener los datos una vez
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    snapshot.children.forEach { child ->
+                        val regAlimento = child.getValue(RegAlimento::class.java)
+                        if (regAlimento != null && regAlimento.fecha == fecha) {
+                             numAlimentos++
+                        }
+                    }
+                }
+
+                callback(numAlimentos)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error al obtener el alimento: $error")
+                callback(0)
+            }
+        })
+    }
+
+
+    // Método para calcular las calorías diarias consumidas por una persona
+    fun calcularCaloriasDiariasConsumidas(email: String, fecha: String, alimentoController: AlimentoController, callback: (Int) -> Unit) {
+        var caloriasConsumidasDiarias = 0
+
+        //Filtramos la busqueda para un usuario
+        val query = refRegAl.orderByChild("email").equalTo(email)
+        query.addListenerForSingleValueEvent(object : ValueEventListener { // Cambiamos a addListenerForSingleValueEvent para obtener los datos una vez
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val childCount = snapshot.childrenCount
+                    var processedCount = 0
+
+                    snapshot.children.forEach { child ->
+                        val regAlimento = child.getValue(RegAlimento::class.java)
+                        if (regAlimento != null && regAlimento.fecha == fecha) { //Si ese registro corresponde a la fecha elegida
+                            alimentoController.obtenerAlimento(regAlimento.idAlimento) { alimentoBD ->
+                                if (alimentoBD != null) {
+                                    // Almacenamos las calorías de cada uno de los alimentos que haya consumido
+                                    // Las redondeamos a 0 decimales
+                                    caloriasConsumidasDiarias += ((alimentoBD.nutrientes.calorias).roundToInt() * regAlimento.cantidad)
+                                }
+                                processedCount++
+                                // Verificamos si todos los alimentos han sido procesados
+                                if (processedCount == childCount.toInt()) {
+                                    callback(caloriasConsumidasDiarias)
+                                }
+                            }
+                        } else {
+                            processedCount++
+                            if (processedCount == childCount.toInt()) {
+                                callback(caloriasConsumidasDiarias)
+                            }
+                        }
+                    }
+                } else {
+                    callback(caloriasConsumidasDiarias)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error al obtener el alimento: $error")
+                callback(-1)
+            }
+        })
+    }
+
+    //Obtener las fechas en las cuales un usuario ha consumido alimentos
+    fun getFechasUsuario(email: String, callback: (List<String?>) -> Unit) {
+        var listaFechas: List<String?> = emptyList()
+        val query = refRegAl.orderByChild("email").equalTo(email)
+        query.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                snapshot.children.forEach { reg ->
+                    val regAlimento = reg.getValue(RegAlimento::class.java)
+                    regAlimento?.let { //Comprobamos que no sea nulo
+                        if(regAlimento != null){ //Buscamos el alimento de la vuelta
+                            listaFechas = listaFechas + regAlimento.fecha
+                        }
+                    }
+                }
+
+                //Sale del bucle, y llama al callback
+                listaFechas = listaFechas.distinctBy { it } //Obtenemos las fechas que nos interesan
+                println("fechas del usuario cogidas")
+                callback(listaFechas)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("No se ha extraido la cantidad del alimento correctamente")
+                callback(listaFechas)
             }
         })
     }

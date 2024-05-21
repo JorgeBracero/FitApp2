@@ -15,6 +15,7 @@ import com.example.fitapp2.vistas.BuscarScreen
 import com.example.fitapp2.vistas.DatosInicialesScreen
 import com.example.fitapp2.vistas.DetallesScreen
 import com.example.fitapp2.vistas.InfoPersonalScreen
+import com.example.fitapp2.vistas.InformesScreen
 import com.example.fitapp2.vistas.LoginScreen
 import com.example.fitapp2.vistas.PasswordScreen
 import com.example.fitapp2.vistas.PerfilScreen
@@ -128,6 +129,11 @@ fun Navigation(
         //RESTABLECER CONTRASEÑA
         composable(route = Rutas.PasswordScreen.ruta){
             PasswordScreen(navController, userController)
+        }
+
+        //INFORMES
+        composable(route = Rutas.InformesScreen.ruta){
+            InformesScreen(navController,alimentoController,regAlimentoController,userController)
         }
     }
 }

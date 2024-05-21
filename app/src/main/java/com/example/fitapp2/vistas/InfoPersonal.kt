@@ -240,11 +240,6 @@ fun FieldEmail(email: String) {
 fun CampoSexo(sexo: String, onClick: () -> Unit){
     var icon by remember { mutableStateOf(Icons.Default.KeyboardArrowDown) }
     OutlinedTextField(
-        modifier = Modifier.clickable {
-            //Abre el dialogo
-            icon = Icons.Default.KeyboardArrowUp
-            onClick()
-        },
         value = sexo,
         onValueChange = {},
         trailingIcon = {

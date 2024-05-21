@@ -147,15 +147,23 @@ fun calcularCaloriasDiarias(usuario: Usuario): Int {
 }
 
 //Calorias diarias consumidas de una persona
-fun calcularCaloriasDiariasConsumidas(
+fun calcularCaloriasTotalesConsumidas(
     usuario: Usuario,
     regAlimentoController: RegAlimentoController,
     alimentoController: AlimentoController,
     callback: (Int) -> Unit
 ) {
-    regAlimentoController.calcularCalorias(usuario.email, alimentoController, { calorias ->
-        callback(calorias)
+    regAlimentoController.calcularCaloriasTotales(usuario.email, alimentoController, { calorias ->
+        if(calorias != -1) {
+            callback(calorias)
+        }
     })
+}
+
+
+//Calcular promedio diario
+fun calcularPromedioDiario(caloriasConsumidas: Int, numAlimentos: Int): Int {
+    return caloriasConsumidas/numAlimentos
 }
 
 

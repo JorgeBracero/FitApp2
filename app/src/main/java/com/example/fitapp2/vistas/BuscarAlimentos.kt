@@ -66,6 +66,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
@@ -173,7 +174,7 @@ fun BuscarScreen(
                 //PROCEDIMIENTO CON CONEXION A INTERNET
                 if(conexion) {
                     isLoading = true // Mostrar indicador de carga
-                    val deferredAlimentos = apiCall(query = query, size = size)
+                    val deferredAlimentos = apiCall(context = context,query = query, size = size)
                     val alimentosResult = deferredAlimentos.await() // Espera a que se complete el Deferred y obtiene el resultado
                     alimentos = alimentosResult as List<Alimento>
                     isLoading = false // Ocultar indicador de carga
@@ -184,6 +185,8 @@ fun BuscarScreen(
                     alimentoController.getAlimentosLocal(query, { alimentosBuscados ->
                         alimentos = alimentosBuscados
                     })
+
+                    println(alimentos)
                 }
             }
         }
@@ -202,13 +205,21 @@ fun BuscarScreen(
                 ) {
                     //Cargamos el recyclerview con la lista de alimentos
                     items(items = alimentos) { alimento ->
-                        val alimentoCorrecto = alimento != null && alimento.imgAlimento != null &&
+                        var alimentoCorrecto = alimento != null && alimento.imgAlimento != null &&
                                 alimento.imgAlimento.isNotEmpty() && alimento.descAlimento != null &&
                                 alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
                                 alimento.marcaAlimento.isNotEmpty() && isValidUrl(alimento.imgAlimento)
 
+                        if(!conexion){
+                            alimentoCorrecto = alimento != null && alimento.imgAlimento != null &&
+                                    alimento.imgAlimento.isNotEmpty() && alimento.descAlimento != null &&
+                                    alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
+                                    alimento.marcaAlimento.isNotEmpty()
+                        }
+
                         if(alimentoCorrecto){
                             CardALimento(
+                                context,
                                 navController,
                                 alimento,
                                 momentoDia,
@@ -230,7 +241,7 @@ fun BuscarScreen(
 
 
 // Llamada a la Api, devuelve la lista de alimentos buscados
-fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
+fun apiCall(context: Context, query: String, size: Int): Deferred<List<Alimento?>> {
     return CoroutineScope(Dispatchers.IO).async {
         val userAgent = "com.example.fitapp2 - Android - Version 1.0"
         val alimentosTemp = mutableListOf<Alimento?>()
@@ -266,7 +277,12 @@ fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
             alimentosTemp.addAll(alimentosFiltrados)
             println("Alimentos Buscados: $alimentosTemp")
         } catch (e: Exception) {
-            println("Error al obtener los productos: ${e.message}")
+            var error = "El servidor se encuentra en mantenimiento, no se pueden recuperar datos"
+            if(e.message == "timeout"){
+                error = "Refresca la busqueda, se le acabo el tiempo"
+            }
+
+            Toast.makeText(context,error, Toast.LENGTH_SHORT).show()
         }
 
         return@async alimentosTemp
@@ -289,6 +305,7 @@ private fun extractBarcodesFromHtml(html: String): List<String> {
 //Vista del alimento extraido
 @Composable
 fun CardALimento(
+    context: Context,
     navController: NavController,
     alimento: Alimento,
     momentoDia: String,
@@ -301,8 +318,8 @@ fun CardALimento(
     var imgSubida by rememberSaveable { mutableStateOf(false) }
     val email = userController.getAuth().currentUser!!.email
     var alimentoGuardado by rememberSaveable { mutableStateOf(false) }
-    var botonBloqueado by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
+    //var botonBloqueado by remember { mutableStateOf(false) }
+    //val coroutineScope = rememberCoroutineScope()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -310,7 +327,9 @@ fun CardALimento(
             .padding(15.dp)
             .clickable {
                 //Navega a la pantalla de detalles del producto
-                navController.navigate(Rutas.DetallesScreen.ruta + "/${alimento.idAlimento}")
+                if (!conexion) {
+                    navController.navigate(Rutas.DetallesScreen.ruta + "/${alimento.idAlimento}")
+                }
             },
         colors = CardDefaults.cardColors(
             containerColor = Color.DarkGray,
@@ -336,7 +355,7 @@ fun CardALimento(
                 ImgAlimentoUrl(url = alimento.imgAlimento) //Imagen del alimento dada una url, con conexion
             }else{
                 println("Imagen sin conexion: ${alimento.imgAlimento}")
-                ImgAlimentoStorage(img = alimento.imgAlimento, storeController) //Imagen del alimento del storage, local
+                storeController.mostrarImagen(context = context, img = alimento.imgAlimento, size = 70.dp)
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column {
@@ -385,9 +404,6 @@ fun CardALimento(
                 println("Añadido correctamente")
             }
         })
-
-        //Navegamos a la pantalla principal
-        navController.navigate(Rutas.PrincipalScreen.ruta)
     }
 }
 
