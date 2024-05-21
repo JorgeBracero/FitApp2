@@ -264,6 +264,53 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
+
+    // Método para calcular las calorías diarias consumidas por una persona en un momento del dia
+    fun calcularCaloriasDiariasConsumidasDia(email: String, fecha: String, momentoDia: String, alimentoController: AlimentoController, callback: (Int) -> Unit) {
+        var caloriasConsumidasDiarias = 0
+
+        //Filtramos la busqueda para un usuario
+        val query = refRegAl.orderByChild("email").equalTo(email)
+        query.addListenerForSingleValueEvent(object : ValueEventListener { // Cambiamos a addListenerForSingleValueEvent para obtener los datos una vez
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val childCount = snapshot.childrenCount
+                    var processedCount = 0
+
+                    snapshot.children.forEach { child ->
+                        val regAlimento = child.getValue(RegAlimento::class.java)
+                        if (regAlimento != null && regAlimento.fecha == fecha && regAlimento.momentoDia == momentoDia) { //Si ese registro corresponde a la fecha elegida
+                            alimentoController.obtenerAlimento(regAlimento.idAlimento) { alimentoBD ->
+                                if (alimentoBD != null) {
+                                    // Almacenamos las calorías de cada uno de los alimentos que haya consumido
+                                    // Las redondeamos a 0 decimales
+                                    caloriasConsumidasDiarias += ((alimentoBD.nutrientes.calorias).roundToInt() * regAlimento.cantidad)
+                                }
+                                processedCount++
+                                // Verificamos si todos los alimentos han sido procesados
+                                if (processedCount == childCount.toInt()) {
+                                    callback(caloriasConsumidasDiarias)
+                                }
+                            }
+                        } else {
+                            processedCount++
+                            if (processedCount == childCount.toInt()) {
+                                callback(caloriasConsumidasDiarias)
+                            }
+                        }
+                    }
+                } else {
+                    callback(caloriasConsumidasDiarias)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error al obtener el alimento: $error")
+                callback(-1)
+            }
+        })
+    }
+
     //Obtener las fechas en las cuales un usuario ha consumido alimentos
     fun getFechasUsuario(email: String, callback: (List<String?>) -> Unit) {
         var listaFechas: List<String?> = emptyList()
@@ -288,6 +335,55 @@ class RegAlimentoController(db: FirebaseDatabase){
             override fun onCancelled(error: DatabaseError) {
                 println("No se ha extraido la cantidad del alimento correctamente")
                 callback(listaFechas)
+            }
+        })
+    }
+
+    //Obtener los alimentos de un usuario en una fecha especifica
+    fun getAlimentosUsuarioFecha(email: String, fecha: String, alimentoController: AlimentoController, callback: (List<Alimento>) -> Unit) {
+        val listaAlimentos: MutableList<Alimento> = mutableListOf()
+        val query = refRegAl.orderByChild("email").equalTo(email)
+        query.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val pendingTasks = snapshot.children.count()
+                if (pendingTasks == 0) {
+                    callback(listaAlimentos)
+                    return
+                }
+
+                var completedTasks = 0
+
+                snapshot.children.forEach { child ->
+                    val regAlimento = child.getValue(RegAlimento::class.java)
+                    println("RegAlimento: $regAlimento")
+                    if (regAlimento != null && regAlimento.fecha == fecha) {
+                        alimentoController.obtenerAlimento(regAlimento.idAlimento) { alimentoBD ->
+                            if (alimentoBD != null) {
+                                println("Alimento a añadir a la lista: $alimentoBD")
+                                // Añadir el alimento a la lista
+                                listaAlimentos.add(alimentoBD)
+                            }
+                            completedTasks++
+                            // Llamar al callback solo cuando todas las tareas hayan completado
+                            if (completedTasks == pendingTasks) {
+                                println("alimentos del usuario obtenidos en una fecha concreta")
+                                callback(listaAlimentos)
+                            }
+                        }
+                    } else {
+                        completedTasks++
+                        // Llamar al callback solo cuando todas las tareas hayan completado
+                        if (completedTasks == pendingTasks) {
+                            println("alimentos del usuario obtenidos en una fecha concreta")
+                            callback(listaAlimentos)
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("No se ha extraido la cantidad del alimento correctamente")
+                callback(listaAlimentos)
             }
         })
     }

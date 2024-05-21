@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -58,7 +60,9 @@ import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.metodos.calcularCaloriasDiarias
 import com.example.fitapp2.metodos.calcularCaloriasTotalesConsumidas
 import com.example.fitapp2.metodos.calcularPromedioDiario
+import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.Rutas
+import com.google.firebase.auth.FirebaseUser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,14 +71,14 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
     val user = userController.getAuth().currentUser
     var fechas by remember { mutableStateOf<List<String?>>(emptyList())}
     var cambiarFecha by remember { mutableStateOf(false)}
-
+    var listaCaloriasMomentosDia by remember { mutableStateOf(MutableList(3) { 0 }) }
+    var listaAlimentos by remember { mutableStateOf<List<Alimento>>(emptyList())}
 
     //Obtenemos las distintas fechas de consumiciones que tiene el usuario
     regAlimentoController.getFechasUsuario(user!!.email!!,{ listaFechas ->
         fechas = listaFechas
     })
 
-    println(fechas)
 
     Scaffold(
         topBar = {
@@ -195,6 +199,42 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                         numAlimentosConsumidos = it
                     })
 
+                    //Obtenemos las calorias en cada momento del dia
+                    //Desayuno
+                    regAlimentoController.calcularCaloriasDiariasConsumidasDia(
+                        user.email!!,
+                        fechaElegida!!,
+                        "Desayuno",
+                        alimentoController,
+                        { listaCaloriasMomentosDia[0] = it }
+                    )
+
+                    //Almuerzo
+                    regAlimentoController.calcularCaloriasDiariasConsumidasDia(
+                        user.email!!,
+                        fechaElegida!!,
+                        "Almuerzo",
+                        alimentoController,
+                        { listaCaloriasMomentosDia[1] = it }
+                    )
+
+                    //Cena
+                    regAlimentoController.calcularCaloriasDiariasConsumidasDia(
+                        user.email!!,
+                        fechaElegida!!,
+                        "Cena",
+                        alimentoController,
+                        { listaCaloriasMomentosDia[2] = it }
+                    )
+
+                    println("ListaCaloriasMomentoDia: $listaCaloriasMomentosDia")
+
+                    //Obtener los alimentos consumidos por el usuario en la fecha especifica
+                    regAlimentoController.getAlimentosUsuarioFecha(user.email!!, fechaElegida!!, alimentoController, { alimentos ->
+                        listaAlimentos = alimentos
+                        println("Lista alimentos: $listaAlimentos")
+                    })
+
                     userController.obtenerDatosUsuario(user.uid, { userBD ->
                         if (userBD.uid.isNotEmpty()) {
                             caloriasDiarias = calcularCaloriasDiarias(userBD) //Calculo las calorias diarias
@@ -223,14 +263,14 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
 
                 Spacer(Modifier.height(10.dp))
 
-                //Card con las estadisticas del usuario
-                CardInforme(context,caloriasDiarias,caloriasConsumidas,promedioDiario)
-
+                //Cards con las estadisticas del usuario
+                CardInforme(context,regAlimentoController,user,caloriasDiarias,caloriasConsumidas,promedioDiario,listaCaloriasMomentosDia,listaAlimentos,false)
+                Spacer(Modifier.height(8.dp))
+                CardInforme(context,regAlimentoController,user,caloriasDiarias,caloriasConsumidas,promedioDiario,listaCaloriasMomentosDia,listaAlimentos,true)
                 //Panel de cambiar fecha
                 if(cambiarFecha){
                     panelFecha(fechas,{ cambiarFecha = false },{ fechaElegida = it })
                 }
-
             }else{
                 Text(text = "Este usuario aun no ha consumido ningun alimento")
             }
@@ -311,9 +351,14 @@ fun FechaElegida(fecha: String, onClick: () -> Unit){
 @Composable
 fun CardInforme(
     context: Context,
+    regAlimentoController: RegAlimentoController,
+    user: FirebaseUser?,
     caloriasDiarias: Int,
     caloriasConsumidas: Int,
-    promedioDiario: Int
+    promedioDiario: Int,
+    listaCaloriasMomentosDia: List<Int>,
+    listaAlimentos: List<Alimento>,
+    esInformeAlimentos: Boolean
 ){
     Card(
         shape = RoundedCornerShape(8.dp),
@@ -325,14 +370,119 @@ fun CardInforme(
             defaultElevation = 8.dp
         )
     ){
-        if (caloriasDiarias != 0) {
-            Text(text = context.getString(R.string.txtCaloriasRes) + "\t\t\t$caloriasDiarias")
-        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(10.dp)
+        ) {
+            if (!esInformeAlimentos) {
 
-        if(caloriasConsumidas != -1) {
-            Text(text = context.getString(R.string.txtCaloriasCon) + "\t\t\t$caloriasConsumidas")
-        }
+                //CONTENIDO INFORME DE CALORIAS
+                if (caloriasDiarias != 0) {
+                    Text(text = context.getString(R.string.txtCaloriasRes) + "\t\t\t$caloriasDiarias")
+                }
 
-        Text(text = "Promedio Diario: $promedioDiario")
+                if (caloriasConsumidas != -1) {
+                    Text(text = context.getString(R.string.txtCaloriasCon) + "\t\t\t$caloriasConsumidas")
+                }
+
+                Text(text = "Promedio Diario $promedioDiario")
+
+                //Bucle para crear el diseño de las calorias para el desayuno, almuerzo y cena
+                val momentosDia = listOf("Desayuno", "Almuerzo", "Cena    ")
+                var index = 0
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(text = "Calorias")
+                }
+                Divider(color = Color.White)
+                momentosDia.forEach { dia ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp, bottom = 5.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_square_24),
+                            contentDescription = "",
+                            tint = Color.Green
+                        )
+                        Text(text = dia)
+                        Spacer(Modifier.width(220.dp))
+                        Text(text = "${listaCaloriasMomentosDia[index]}")
+                    }
+                    Divider(color = Color.White)
+                    index++ //Actualizamos la posicion
+                }
+
+            }else{
+                //CONTENIDO INFORME DE ALIMENTOS TOMADOS
+                var totalAlimentos = 0
+                Text(text = "Alimentos tomados")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(7.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ){
+                    Text(text = "Alimentos")
+                    Spacer(Modifier.width(70.dp))
+                    Text(text = "Cantidad")
+                    Text(text = "Calorias")
+                }
+
+                Divider(color = Color.White)
+                println("Lista alimentos: $listaAlimentos")
+                //Recorremos la lista de alimentos consumidos por el usuario en una fecha especifica
+                listaAlimentos.forEach { alimento ->
+                    //Inicializamos una variable cantidad
+                    var cantidad by remember { mutableStateOf(1) }
+
+                    //Obtenemos la cantidad del alimento aqui
+                    regAlimentoController.obtenerCantidadAlimentoBD(alimento, user!!.email!!, {cantidadBD ->
+                        if(cantidadBD != -1) {
+                            println("Cantidad antes de la asignacion: $cantidadBD")
+                            cantidad = cantidadBD
+                        }
+                    })
+
+                    println("Cantidad fuera del foreach: $cantidad")
+
+                    if(cantidad != -1) {
+                        totalAlimentos += cantidad
+                        var calorias = alimento.nutrientes.calorias * cantidad
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 5.dp, bottom = 5.dp),
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            Text(text = alimento.descAlimento)
+                            Spacer(Modifier.width(50.dp))
+                            Text(text = "x$cantidad")
+                            Text(text = calorias.toString())
+                        }
+                        Divider(color = Color.White)
+                    }
+                }
+
+                //TOTAL CALORIAS
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(7.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ){
+                    Text(text = "Total")
+                    Spacer(Modifier.width(70.dp))
+                    Text(text = "x$totalAlimentos")
+                    Text(text = caloriasConsumidas.toString())
+                }
+            }
+        }
     }
 }
