@@ -1,28 +1,33 @@
 package com.example.fitapp2.vistas
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -30,7 +35,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,20 +45,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.fitapp2.R
-import com.example.fitapp2.controladores.AlimentoController
-import com.example.fitapp2.controladores.CategoriaController
-import com.example.fitapp2.controladores.RegAlimentoController
-import com.example.fitapp2.controladores.UsuarioController
-import com.example.fitapp2.metodos.calcularCaloriasDiarias
 import com.example.fitapp2.modelos.Rutas
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrincipalScreen(navController: NavController){
     val context = LocalContext.current
+    var qrResult by remember { mutableStateOf<String?>(null) }
+    val scanLauncher = rememberLauncherForActivityResult(contract = ScanContract(), onResult = { result ->
+        qrResult = result.contents
+    })
     Scaffold(
         topBar = {
             TopAppBar(
@@ -89,7 +96,8 @@ fun PrincipalScreen(navController: NavController){
                                 imageVector = Icons.Default.Person,
                                 contentDescription = "Perfil",
                                 tint = Color.White,
-                                modifier = Modifier.size(45.dp)
+                                modifier = Modifier
+                                    .size(45.dp)
                                     .clickable {
                                         //Navega al perfil del usuario
                                         navController.navigate(route = Rutas.PerfilScreen.ruta)
@@ -115,7 +123,8 @@ fun PrincipalScreen(navController: NavController){
                                 imageVector = Icons.Default.Info,
                                 contentDescription = "Informes",
                                 tint = Color.White,
-                                modifier = Modifier.size(45.dp)
+                                modifier = Modifier
+                                    .size(45.dp)
                                     .clickable {
                                         navController.navigate(Rutas.InformesScreen.ruta)
                                     }
@@ -142,7 +151,37 @@ fun PrincipalScreen(navController: NavController){
                 containerColor = Color.Black,
                 contentColor = Color.White
             )
-        }
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                modifier = Modifier.size(50.dp),
+                shape = CircleShape,
+                containerColor = Color(0xFF33B2A8),
+                onClick = {
+                    //Abre la camara con el scaner qr
+                    //Mostramos el scanner qr
+                    var options = ScanOptions()
+                    options.setPrompt("Enfoque a un codigo de barras de un alimento")
+                    options.setBarcodeImageEnabled(true) //Para que pueda escanear codigos de barras
+                    options.setDesiredBarcodeFormats(ScanOptions.PRODUCT_CODE_TYPES) // Solo escanear códigos de barras de productos
+                    scanLauncher.launch(options)
+                }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .background(Color.White)
+                        .size(32.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_qr_code_2_24),
+                        contentDescription = "Escaner qr",
+                        tint = Color.Black,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -155,9 +194,13 @@ fun PrincipalScreen(navController: NavController){
             TarjetaDia(context.getString(R.string.txtDesayuno), R.drawable.desayuno,navController)
             TarjetaDia(context.getString(R.string.txtAlmuerzo), R.drawable.almuerzo,navController)
             TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena,navController)
+            Text(text = qrResult?: "No hay resultado")
         }
     }
 }
+
+//Escaner qr y vainas
+
 
 
 @Composable
@@ -201,7 +244,8 @@ fun TarjetaDia(momentoDia: String, idImg: Int,navController: NavController){
                     imageVector = Icons.Default.Add,
                     contentDescription = "Añadir",
                     tint = Color.Cyan,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier
+                        .size(40.dp)
                         .clickable {
                             //Navegamos a la pantalla BuscarScreen, dependiendo del momento del dia
                             //Identificamos el momento del dia pasandole un parametro
