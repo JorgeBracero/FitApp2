@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CardElevation
@@ -71,8 +73,10 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
     val user = userController.getAuth().currentUser
     var fechas by remember { mutableStateOf<List<String?>>(emptyList())}
     var cambiarFecha by remember { mutableStateOf(false)}
-    var listaCaloriasMomentosDia by remember { mutableStateOf(MutableList(3) { 0 }) }
+    var listaCaloriasMomentosDia by remember { mutableStateOf(MutableList(3) {0}) }
     var listaAlimentos by remember { mutableStateOf<List<Alimento>>(emptyList())}
+    var informeSeleccionado by remember { mutableStateOf("calorias")}
+    var listaNutrientes by remember { mutableStateOf<List<Int>>(emptyList()) }
 
     //Obtenemos las distintas fechas de consumiciones que tiene el usuario
     regAlimentoController.getFechasUsuario(user!!.email!!,{ listaFechas ->
@@ -191,12 +195,17 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                 //Una vez obtenidas las fechas, guardamos la fecha seleccionada actual
                 var fechaElegida by remember { mutableStateOf(fechas[0])}
 
-                //Obtenemos los datos de la base de datos
+                //Obtenemos los datos de la base de datos, y actualizamos en tiempo real los datos
                 LaunchedEffect(fechaElegida) {
 
                     //Obtenemos el numero de alimentos consumidos por ese usuario en esa fecha
                     regAlimentoController.getNumAlimentosFechaUsuario(user.email!!, fechaElegida!!, {
                         numAlimentosConsumidos = it
+                    })
+
+                    //Obtenemos los nutrientes totales de los alimentos consumidos en esa fecha del usuario actual
+                    regAlimentoController.getTotalNutrientes(user.email!!, fechaElegida!!, alimentoController, {
+                        listaNutrientes = it
                     })
 
                     //Obtenemos las calorias en cada momento del dia
@@ -263,10 +272,39 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
 
                 Spacer(Modifier.height(10.dp))
 
+                //BOTONES PARA CAMBIAR EL CARD PRINCIPAL
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ){
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            informeSeleccionado = "calorias"
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.LightGray
+                        )
+                    ){
+                        Text(text = "CALORIAS")
+                    }
+
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        onClick = {
+                            informeSeleccionado = "nutrientes"
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.LightGray
+                        )
+                    ){
+                        Text(text = "NUTRIENTES")
+                    }
+                }
+
                 //Cards con las estadisticas del usuario
-                CardInforme(context,regAlimentoController,user,caloriasDiarias,caloriasConsumidas,promedioDiario,listaCaloriasMomentosDia,listaAlimentos,false)
+                CardInforme(context,regAlimentoController,user,caloriasDiarias,caloriasConsumidas,promedioDiario,listaCaloriasMomentosDia,listaAlimentos,listaNutrientes,informeSeleccionado)
                 Spacer(Modifier.height(8.dp))
-                CardInforme(context,regAlimentoController,user,caloriasDiarias,caloriasConsumidas,promedioDiario,listaCaloriasMomentosDia,listaAlimentos,true)
+                CardInforme(context,regAlimentoController,user,caloriasDiarias,caloriasConsumidas,promedioDiario,listaCaloriasMomentosDia,listaAlimentos,listaNutrientes,"alimentos tomados")
                 //Panel de cambiar fecha
                 if(cambiarFecha){
                     panelFecha(fechas,{ cambiarFecha = false },{ fechaElegida = it })
@@ -358,7 +396,8 @@ fun CardInforme(
     promedioDiario: Int,
     listaCaloriasMomentosDia: List<Int>,
     listaAlimentos: List<Alimento>,
-    esInformeAlimentos: Boolean
+    listaNutrientes: List<Int>,
+    descInforme: String
 ){
     Card(
         shape = RoundedCornerShape(8.dp),
@@ -375,8 +414,7 @@ fun CardInforme(
                 .fillMaxSize()
                 .padding(10.dp)
         ) {
-            if (!esInformeAlimentos) {
-
+            if (descInforme == "calorias") {
                 //CONTENIDO INFORME DE CALORIAS
                 if (caloriasDiarias != 0) {
                     Text(text = context.getString(R.string.txtCaloriasRes) + "\t\t\t$caloriasDiarias")
@@ -420,67 +458,119 @@ fun CardInforme(
                 }
 
             }else{
-                //CONTENIDO INFORME DE ALIMENTOS TOMADOS
-                var totalAlimentos = 0
-                Text(text = "Alimentos tomados")
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(7.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ){
-                    Text(text = "Alimentos")
-                    Spacer(Modifier.width(70.dp))
-                    Text(text = "Cantidad")
-                    Text(text = "Calorias")
-                }
+                if (descInforme == "nutrientes") {
+                    //CONTENIDO INFORME DE NUTRIENTES
+                    Text(text = "Nutrientes")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(7.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Text(text = "Nutriente")
+                        Spacer(Modifier.width(100.dp))
+                        Text(text = "Total")
+                    }
 
-                Divider(color = Color.White)
-                println("Lista alimentos: $listaAlimentos")
-                //Recorremos la lista de alimentos consumidos por el usuario en una fecha especifica
-                listaAlimentos.forEach { alimento ->
-                    //Inicializamos una variable cantidad
-                    var cantidad by remember { mutableStateOf(1) }
+                    Divider(color = Color.White)
 
-                    //Obtenemos la cantidad del alimento aqui
-                    regAlimentoController.obtenerCantidadAlimentoBD(alimento, user!!.email!!, {cantidadBD ->
-                        if(cantidadBD != -1) {
-                            println("Cantidad antes de la asignacion: $cantidadBD")
-                            cantidad = cantidadBD
-                        }
-                    })
+                    //Array con los nutrientes definidos en la app
+                    val nutrientes = listOf(
+                        "Calorias (kcal)",
+                        "Proteinas (g)",
+                        "Carbohidratos (g)",
+                        "Azucares (g)",
+                        "Grasas (g)",
+                        "Sal (g)",
+                        "Sodio (g)"
+                    )
 
-                    println("Cantidad fuera del foreach: $cantidad")
+                    //Indice para mostrar el valor de cada nutriente
+                    var index = 0
 
-                    if(cantidad != -1) {
-                        totalAlimentos += cantidad
-                        var calorias = alimento.nutrientes.calorias * cantidad
+                    //Recorremos la lista de nutrientes, y sacamos el total de cada uno por un usuario
+                    //En una fecha especifica
+                    nutrientes.forEach { nutriente ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 5.dp, bottom = 5.dp),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            Text(text = alimento.descAlimento)
-                            Spacer(Modifier.width(50.dp))
-                            Text(text = "x$cantidad")
-                            Text(text = calorias.toString())
+                            Text(text = nutriente)
+                            Spacer(Modifier.width(100.dp))
+                            Text(text = "${listaNutrientes[index]}")
                         }
                         Divider(color = Color.White)
+                        index++ //Autoincrementamos la variable
                     }
-                }
 
-                //TOTAL CALORIAS
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(7.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ){
-                    Text(text = "Total")
-                    Spacer(Modifier.width(70.dp))
-                    Text(text = "x$totalAlimentos")
-                    Text(text = caloriasConsumidas.toString())
+                }else{
+                    //CONTENIDO INFORME DE ALIMENTOS TOMADOS
+                    var totalAlimentos = 0
+                    Text(text = "Alimentos tomados")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(7.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Text(text = "Alimentos")
+                        Spacer(Modifier.width(70.dp))
+                        Text(text = "Cantidad")
+                        Text(text = "Calorias")
+                    }
+
+                    Divider(color = Color.White)
+                    println("Lista alimentos: $listaAlimentos")
+                    //Recorremos la lista de alimentos consumidos por el usuario en una fecha especifica
+                    listaAlimentos.forEach { alimento ->
+                        //Inicializamos una variable cantidad
+                        var cantidad by remember { mutableStateOf(1) }
+
+                        //Obtenemos la cantidad del alimento aqui
+                        regAlimentoController.obtenerCantidadAlimentoBD(
+                            alimento,
+                            user!!.email!!,
+                            { cantidadBD ->
+                                if (cantidadBD != -1) {
+                                    println("Cantidad antes de la asignacion: $cantidadBD")
+                                    cantidad = cantidadBD
+                                }
+                            })
+
+                        println("Cantidad fuera del foreach: $cantidad")
+
+                        if (cantidad != -1) {
+                            totalAlimentos += cantidad
+                            var calorias = alimento.nutrientes.calorias * cantidad
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp, bottom = 5.dp),
+                                horizontalArrangement = Arrangement.SpaceAround
+                            ) {
+                                Text(text = alimento.descAlimento)
+                                Spacer(Modifier.width(50.dp))
+                                Text(text = "x$cantidad")
+                                Text(text = calorias.toString())
+                            }
+                            Divider(color = Color.White)
+                        }
+                    }
+
+                    //TOTAL CALORIAS
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(7.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        Text(text = "Total")
+                        Spacer(Modifier.width(70.dp))
+                        Text(text = "x$totalAlimentos")
+                        Text(text = caloriasConsumidas.toString())
+                    }
                 }
             }
         }

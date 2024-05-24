@@ -11,6 +11,10 @@ import androidx.compose.runtime.DisposableEffect
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.modelos.Usuario
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
 import java.net.MalformedURLException
 import java.net.URL
 import java.time.LocalDate
@@ -164,6 +168,23 @@ fun calcularCaloriasTotalesConsumidas(
 //Calcular promedio diario
 fun calcularPromedioDiario(caloriasConsumidas: Int, numAlimentos: Int): Int {
     return caloriasConsumidas/numAlimentos
+}
+
+//Genera una clave aleatoria dada por firebase, a partir de una referencia
+fun generarKey(ref: DatabaseReference, callback: (String?) -> Unit) {
+    // Obtener los datos de alimentos
+    ref.addListenerForSingleValueEvent(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            // Incrementar el último valor de alimento en 1 para obtener el nuevo valor
+            val key = ref.push().key
+            callback(key)
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            println("Error al obtener los datos de alimentos: $error")
+            callback(null)
+        }
+    })
 }
 
 

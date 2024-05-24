@@ -1,5 +1,6 @@
 package com.example.fitapp2.controladores
 
+import com.example.fitapp2.metodos.generarKey
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
 import com.google.firebase.database.DataSnapshot
@@ -13,26 +14,9 @@ class RegAlimentoController(db: FirebaseDatabase){
     private val refRegAl = db.getReference("regAlimentos")
 
     fun addRegAlimento(regAlimento: RegAlimento){
-        generarKey({ key ->
+        generarKey(refRegAl,{ key ->
             if(key != null) {
                 refRegAl.child(key).setValue(regAlimento)
-            }
-        })
-    }
-
-    //Genera una clave aleatoria dada por firebase
-    private fun generarKey(callback: (String?) -> Unit) {
-        // Obtener los datos de alimentos
-        refRegAl.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                // Incrementar el último valor de alimento en 1 para obtener el nuevo valor
-                val key = refRegAl.push().key
-                callback(key)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                println("Error al obtener los datos de alimentos: $error")
-                callback(null)
             }
         })
     }
@@ -67,6 +51,7 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
+    //Metodo que indica si un alimento ha sido consumido ya o no
     fun alimentoConsumido(alimento: Alimento, email: String, callback: (Boolean) -> Unit){
         var alimentoConsumido = false
         val query = refRegAl.orderByChild("idAlimento").equalTo(alimento.idAlimento)
@@ -173,24 +158,6 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
-    // Método para calcular todos los alimentos consumidos por una persona
-    fun getNumAlimentosUsuario(email: String, callback: (Int) -> Unit) {
-        var caloriasTotales = 0
-        val query = refRegAl.orderByChild("email").equalTo(email)
-        query.addListenerForSingleValueEvent(object : ValueEventListener { // Cambiamos a addListenerForSingleValueEvent para obtener los datos una vez
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    val childCount = snapshot.childrenCount.toInt()
-                    callback(childCount)
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                println("Error al obtener el alimento: $error")
-                callback(0)
-            }
-        })
-    }
 
     // Método para calcular los alimentos consumidos por una persona en una fecha
     fun getNumAlimentosFechaUsuario(email: String, fecha: String, callback: (Int) -> Unit) {
@@ -335,6 +302,38 @@ class RegAlimentoController(db: FirebaseDatabase){
             override fun onCancelled(error: DatabaseError) {
                 println("No se ha extraido la cantidad del alimento correctamente")
                 callback(listaFechas)
+            }
+        })
+    }
+
+    //Obtener los nutrientes totales de los alimentos consumidos por un usuario en una fecha
+    fun getTotalNutrientes(email: String, fecha: String, alimentoController: AlimentoController, callback: (List<Int>) -> Unit) {
+        var listaNutrientes = MutableList(7){0}
+
+        //Recogemos los alimentos consumidos en esa fecha por ese usuario, y extraemos
+        //La cantidad de cada uno de esos alimentos
+        getAlimentosUsuarioFecha(email,fecha,alimentoController,{ listaAlimentos ->
+            if(listaAlimentos != null && listaAlimentos.size > 0){
+                //Recorremos cada alimento, y extraemos la cantidad consumida
+                listaAlimentos.forEach { alimento ->
+                    if(alimento != null && alimento.idAlimento.isNotEmpty()){
+                        //Obtenemos la cantidad consumida de ese alimento
+                        obtenerCantidadAlimentoBD(alimento,email,{ cantidadBD ->
+                            if(cantidadBD != -1){
+                                listaNutrientes[0] += (alimento.nutrientes.calorias * cantidadBD).toInt()
+                                listaNutrientes[1] += (alimento.nutrientes.proteinas * cantidadBD).toInt()
+                                listaNutrientes[2] += (alimento.nutrientes.carbohidratos * cantidadBD).toInt()
+                                listaNutrientes[3] += (alimento.nutrientes.azucar * cantidadBD).toInt()
+                                listaNutrientes[4] += (alimento.nutrientes.grasas * cantidadBD).toInt()
+                                listaNutrientes[5] += (alimento.nutrientes.sal * cantidadBD).toInt()
+                                listaNutrientes[6] += (alimento.nutrientes.sodio * cantidadBD).toInt()
+                            }
+                        })
+                    }
+                }
+
+                //Una vez terminado el proceso, llamamos al callback
+                callback(listaNutrientes)
             }
         })
     }

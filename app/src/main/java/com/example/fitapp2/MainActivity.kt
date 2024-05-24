@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.lifecycleScope
 import com.example.fitapp2.apiService.ApiServiceFactory
 import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.CategoriaController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.controladores.UsuarioController
@@ -64,7 +65,10 @@ class MainActivity : ComponentActivity() {
 
                     //Controlador de los usuarios
                     val userController = UsuarioController(db)
-                    Navigation(alimentoController, regAlimentoController,storeController, userController)
+
+                    //Controlador de categorias
+                    val catController = CategoriaController(db)
+                    Navigation(alimentoController, regAlimentoController,storeController, userController,catController)
                 }
             }
         }

@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.CategoriaController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.controladores.UsuarioController
@@ -28,7 +29,8 @@ fun Navigation(
     alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
     storeController: StorageController,
-    userController: UsuarioController
+    userController: UsuarioController,
+    catController: CategoriaController
 ){
     val navController = rememberNavController()
     NavHost(
@@ -39,7 +41,7 @@ fun Navigation(
         composable(route = Rutas.LoginScreen.ruta){
             val userActual = userController.getAuth().currentUser //Cogemos el usuario actual
             if(userActual != null) { //Si ya esta logueado, navega directamente a la pantalla principal
-                PrincipalScreen(navController,alimentoController,regAlimentoController,userController)
+                PrincipalScreen(navController)
             }else{ //En caso contrario carga la pantalla de logueo
                 LoginScreen(navController, userController)
             }
@@ -47,7 +49,7 @@ fun Navigation(
 
         //INICIO
         composable(route = Rutas.PrincipalScreen.ruta){
-            PrincipalScreen(navController,alimentoController,regAlimentoController,userController)
+            PrincipalScreen(navController)
         }
 
         //PERFIL
@@ -78,7 +80,8 @@ fun Navigation(
                 alimentoController,
                 regAlimentoController,
                 storeController,
-                userController
+                userController,
+                catController
             ) }
         }
 

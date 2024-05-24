@@ -3,6 +3,7 @@ package com.example.fitapp2.controladores
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.controladores.RegAlimentoController
+import com.example.fitapp2.modelos.Categoria
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -136,16 +137,8 @@ class AlimentoController(db: FirebaseDatabase){
                                 // Filtramos los alimentos por la búsqueda
                                 var alimentosBuscados = alimentosTemp.filter {
                                     it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
-                                            it.descAlimento.toLowerCase().contains(query.toLowerCase()) ||
-                                            it.marcaAlimento.toLowerCase().contains(query.toLowerCase()) ||
                                             it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
                                 }
-
-                                /*
-                                //Al cargar la pantalla, queremos mostrar todos los alimentos que tenga
-                                if(query.isEmpty()){
-                                    alimentosBuscados = alimentosTemp
-                                }*/
 
                                 println("Alimentos Buscados: $alimentosBuscados")
 
@@ -162,6 +155,75 @@ class AlimentoController(db: FirebaseDatabase){
                         })
                         // Eliminar el listener de RegAlimentos después de que se complete el onDataChange
                         regAlimentoController.getRefRegAl().removeEventListener(this)
+                    }
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                println("Error al obtener alimentos locales: ${databaseError.message}")
+                // Llamamos al callback con una lista vacía en caso de error
+                callback(emptyList())
+            }
+        })
+    }
+
+    //Metodo para mostrar las categorias disponibles a filtrar
+    fun getCategoriasDia(
+        momentoDia: String,
+        email: String,
+        regAlimentoController: RegAlimentoController,
+        callback: (List<String>) -> Unit
+    ) {
+        val categoriasTemp = mutableListOf("Filtrar") //Categoria por defecto
+
+        // Listener para obtener los cambios en los datos de alimentos
+        refAlimentos.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                dataSnapshot.children.forEach { data ->
+                    val alimento = data.getValue(Alimento::class.java)
+                    println("Alimento de la vuelta: $alimento")
+                    alimento?.let {
+                        var encontrado = false // Variable para seguir el estado de si se ha encontrado el objeto o no
+                        // Por cada alimento, comprobamos el momento del día en el cual se ha consumido
+                        regAlimentoController.getRefRegAl().addValueEventListener(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                snapshot.children.forEach { reg ->
+                                    if (encontrado) return@forEach // Si ya se encontró el objeto, salir del bucle
+                                    val regAlimento = reg.getValue(RegAlimento::class.java)
+                                    println("Registro alimento ${alimento.idAlimento}: $regAlimento")
+                                    regAlimento?.let {
+                                        if (regAlimento.idAlimento == alimento.idAlimento &&
+                                            regAlimento.momentoDia == momentoDia && regAlimento.email == email) {
+                                            println("Alimento encontrado: $alimento")
+
+                                            //Recorro las categorias de cada alimento y las añado a la lista
+                                            alimento.catsAlimento.trim().split(",").forEach { cat ->
+                                                categoriasTemp.add(cat)
+                                            }
+
+                                            println("Lista categorias actual: $categoriasTemp")
+                                            encontrado = true
+                                        }
+                                    }
+                                }
+
+                                println("categoriasTemp fuera de change: $categoriasTemp")
+                                // Filtramos las categorias para que no haya repetidas
+                                var categoriasFiltradas = categoriasTemp.distinctBy { it }
+
+                                println("categorias filtradas: $categoriasFiltradas")
+
+                                // Llamamos al callback con la lista filtrada
+                                callback(categoriasFiltradas)
+                                println("se ejecuto el callback")
+                            }
+
+                            override fun onCancelled(databaseError: DatabaseError) {
+                                println("Error al obtener los registros de los alimentos: ${databaseError.message}")
+                                // Llamamos al callback con una lista vacía en caso de error
+                                callback(emptyList())
+                            }
+                        })
                     }
                 }
             }

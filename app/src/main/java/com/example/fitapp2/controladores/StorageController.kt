@@ -9,14 +9,19 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.fitapp2.metodos.isValidUrl
 import com.example.fitapp2.modelos.Alimento
+import com.example.fitapp2.modelos.Categoria
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +46,8 @@ class StorageController {
     @Composable
     fun subirImagen(
         alimento: Alimento,
-        alimentoController: AlimentoController
+        alimentoController: AlimentoController,
+        catController: CategoriaController
     ) {
             //Sube la imagen al storage, sino no hace nada
             LaunchedEffect(alimento.imgAlimento) {
@@ -58,10 +65,16 @@ class StorageController {
                             // Como campo al alimento le añadimos la URL
                             alimento.imgAlimento = alimento.descAlimento
 
-                            //Guardo el alimento seleccionado y su registro en la db, a partir de mi ref
+                            //Guardo el alimento seleccionado, su registro en la db y sus categorias, a partir de mi ref
                             alimentoController.obtenerAlimento(alimento.idAlimento, { alimentoBD ->
                                 if (alimentoBD.idAlimento.isEmpty()) { //Si el alimento que intento añadir no existe, lo guardo
                                     alimentoController.addAlimento(alimento)
+
+                                    //Recorro las categorias de cada alimento y las añado a la base de datos
+                                    alimento.catsAlimento.trim().split(",").forEach { cat ->
+                                        val categoria = Categoria(cat.trim()) //Instancio una categoria por cada una
+                                        catController.addCategoria(categoria) //Añade la categoria
+                                    }
                                 }
                             })
                         }.addOnFailureListener { exception ->

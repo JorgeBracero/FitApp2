@@ -10,6 +10,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -91,25 +92,50 @@ fun AlimentosConsumidosScreen(
     var query by rememberSaveable { mutableStateOf("") }
     val email = userController.getAuth().currentUser!!.email
     var showClear by rememberSaveable { mutableStateOf(false) }
+    var showCategorias by rememberSaveable { mutableStateOf(false) }
     var alimentos by rememberSaveable { mutableStateOf<List<Alimento>>(emptyList()) }
+    var categorias by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
+    var categoriaSeleccionada by rememberSaveable { mutableStateOf("Filtrar") }
+
+
+    //Rellenamos la lista de categorias
+    alimentoController.getCategoriasDia(momentoDia,email!!,regAlimentoController,{ categoriasFiltradas ->
+        categorias = categoriasFiltradas
+    })
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
             .padding(8.dp)
     ){
-        Text(
-            text = momentoDia,
-            color = Color.White,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = TextUnit(30f, TextUnitType.Sp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = momentoDia,
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = TextUnit(30f, TextUnitType.Sp)
+            )
+            Spacer(Modifier.width(60.dp))
+            //Boton para filtrar la busqueda por categoria
+            Button(
+                onClick = {
+                    //Abre el dialogo para seleccionar una categoria
+                    showCategorias = true
+                }
+            ) {
+                Text(text = categoriaSeleccionada)
+            }
+        }
 
         Spacer(Modifier.height(8.dp))
 
         Row(
-            modifier = Modifier.padding(start = 10.dp),
+            modifier = Modifier.padding(6.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -152,13 +178,13 @@ fun AlimentosConsumidosScreen(
             )
         }
 
+        //Panel categorias
+        if(showCategorias){
+            panelCategorias(categorias, {showCategorias = false}, {categoriaSeleccionada = it})
+        }
 
         //Busqueda de productos, segun el momento del dia
-        if(query.isEmpty()){
-            /*alimentoController.getAlimentosDia(query, momentoDia, email!!, regAlimentoController, { alimentosBuscados ->
-                alimentos = alimentosBuscados
-            })*/
-        }else{
+        if(query.isNotEmpty()){
             LaunchedEffect(query) {
                 println(query)
                 alimentoController.getAlimentosDia(query, momentoDia, email!!, regAlimentoController, { alimentosBuscados ->
@@ -166,7 +192,6 @@ fun AlimentosConsumidosScreen(
                 })
             }
         }
-
 
         Spacer(Modifier.height(12.dp))
 
@@ -200,6 +225,53 @@ fun AlimentosConsumidosScreen(
     }
 }
 
+
+//Panel para seleccionar una categoria
+@Composable
+fun panelCategorias(categorias: List<String>, onDismiss: () -> Unit, callback: (String) -> Unit) {
+    var selectedItem by rememberSaveable { mutableStateOf(0) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {},
+        text = {
+            Box(
+                modifier = Modifier.size(height = 180.dp, width = 170.dp)
+            ) {
+                LazyColumn {
+                    items(categorias) { cat ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    println("Antes de cambiar: $selectedItem")
+                                    selectedItem = categorias.indexOf(cat)
+                                    println("Despues de actualizar: $selectedItem")
+                                    callback(categorias[selectedItem])
+                                    onDismiss() //Cerramos el dialog
+                                }
+                        ) {
+                            Text(text = cat)
+                            Spacer(modifier = Modifier.weight(1f))
+                            RadioButton(
+                                selected = selectedItem == categorias.indexOf(cat),
+                                onClick = {
+                                    println("Antes de cambiar: $selectedItem")
+                                    selectedItem = categorias.indexOf(cat)
+                                    println("Despues de actualizar: $selectedItem")
+                                    callback(categorias[selectedItem])
+                                    onDismiss() //Cerramos el dialog
+                                }
+                            )
+                        }
+                        Divider()
+                    }
+                }
+            }
+        },
+        containerColor = Color.DarkGray
+    )
+}
 
 @Composable
 fun DiseñoAlimento(
@@ -241,7 +313,8 @@ fun DiseñoAlimento(
                             isHolding = true
                         }
                     )
-                }.horizontalScroll(state = scrollState),
+                }
+                .horizontalScroll(state = scrollState),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
                 Column {
@@ -438,8 +511,12 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ema
                             .fillMaxWidth()
                             .clickable {
                                 selectedItem = items.indexOf(item)
-                                if(items[selectedItem] != momentoDia) {
-                                    regAlimentoController.actualizarMomentoDiaBD(alimento, email,items[selectedItem]) //Actualizamos en la base de datos
+                                if (items[selectedItem] != momentoDia) {
+                                    regAlimentoController.actualizarMomentoDiaBD(
+                                        alimento,
+                                        email,
+                                        items[selectedItem]
+                                    ) //Actualizamos en la base de datos
                                 }
                                 cambiarIcono()
                                 onDismiss() //Cerramos el dialog

@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.R
 import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.CategoriaController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.metodos.calcularCaloriasDiarias
@@ -52,14 +53,8 @@ import com.example.fitapp2.modelos.Rutas
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrincipalScreen(
-    navController: NavController,
-    alimentoController: AlimentoController,
-    regAlimentoController: RegAlimentoController,
-    userController: UsuarioController
-){
+fun PrincipalScreen(navController: NavController){
     val context = LocalContext.current
-    val uid = userController.getAuth().currentUser!!.uid
     Scaffold(
         topBar = {
             TopAppBar(

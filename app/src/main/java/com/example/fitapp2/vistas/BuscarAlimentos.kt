@@ -79,6 +79,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavDeepLinkRequest
 import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.CategoriaController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.controladores.UsuarioController
@@ -103,7 +104,8 @@ fun BuscarScreen(
     alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
     storeController: StorageController,
-    userController: UsuarioController
+    userController: UsuarioController,
+    catController: CategoriaController
 ){
     var query by rememberSaveable { mutableStateOf("") }
     var showClear by rememberSaveable { mutableStateOf(false) }
@@ -174,7 +176,7 @@ fun BuscarScreen(
                 //PROCEDIMIENTO CON CONEXION A INTERNET
                 if(conexion) {
                     isLoading = true // Mostrar indicador de carga
-                    val deferredAlimentos = apiCall(context = context,query = query, size = size)
+                    val deferredAlimentos = apiCall(query = query, size = size)
                     val alimentosResult = deferredAlimentos.await() // Espera a que se complete el Deferred y obtiene el resultado
                     alimentos = alimentosResult as List<Alimento>
                     isLoading = false // Ocultar indicador de carga
@@ -227,6 +229,7 @@ fun BuscarScreen(
                                 regAlimentoController,
                                 storeController,
                                 userController,
+                                catController,
                                 conexion
                             ) //Creamos un card para cada uno
                         }
@@ -241,7 +244,7 @@ fun BuscarScreen(
 
 
 // Llamada a la Api, devuelve la lista de alimentos buscados
-fun apiCall(context: Context, query: String, size: Int): Deferred<List<Alimento?>> {
+fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
     return CoroutineScope(Dispatchers.IO).async {
         val userAgent = "com.example.fitapp2 - Android - Version 1.0"
         val alimentosTemp = mutableListOf<Alimento?>()
@@ -282,7 +285,7 @@ fun apiCall(context: Context, query: String, size: Int): Deferred<List<Alimento?
                 error = "Refresca la busqueda, se le acabo el tiempo"
             }
 
-            Toast.makeText(context,error, Toast.LENGTH_SHORT).show()
+            println(error)
         }
 
         return@async alimentosTemp
@@ -313,6 +316,7 @@ fun CardALimento(
     regAlimentoController: RegAlimentoController,
     storeController: StorageController,
     userController: UsuarioController,
+    catController: CategoriaController,
     conexion: Boolean
 ){
     var imgSubida by rememberSaveable { mutableStateOf(false) }
@@ -392,7 +396,7 @@ fun CardALimento(
 
     //Si la descarga de la imagen ha ido bien, se sigue con el proceso de guardado
     if(imgSubida){
-        storeController.subirImagen(alimento, alimentoController)
+        storeController.subirImagen(alimento, alimentoController, catController)
 
         //Por ultimo subo el registro de ese alimento, compruebo que ya no tenga uno para ese mismo usuario
         val regAlimento = RegAlimento(idAlimento = alimento.idAlimento, email = email!!,momentoDia = momentoDia, cantidad = 1)

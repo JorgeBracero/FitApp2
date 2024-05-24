@@ -1,10 +1,5 @@
 package com.example.fitapp2.vistas
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.drawable.Drawable
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -183,11 +178,14 @@ fun DetallesScreen(
                     Text(text = "Sal: ${alimento!!.nutrientes.sal} g")
                     Text(text = "Carbohidratos: ${alimento!!.nutrientes.carbohidratos} g")
                     Text(text = "Proteinas: ${alimento!!.nutrientes.proteinas} g")
+                    Text(text = "Grasas: ${alimento!!.nutrientes.grasas} g")
                     Text(text = "Sodio: ${alimento!!.nutrientes.sodio} g")
                 }
 
                 //Calorias
-                Text(text = "Calorias Totales: ${alimento!!.nutrientes.calorias} cal")
+                Text(text = "Calorias 100g: ${alimento!!.nutrientes.calorias} cal")
+
+                //AÑADIR FECHA DE CONSUMO DEL ALIMENTO
             }
         }
     }
