@@ -64,6 +64,7 @@ import com.example.fitapp2.controladores.CategoriaController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.controladores.UsuarioController
+import com.example.fitapp2.metodos.isConnectedToNetwork
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
@@ -89,6 +90,7 @@ fun PrincipalScreen(
     userController: UsuarioController
 ){
     val context = LocalContext.current
+    val conexion = isConnectedToNetwork(context)
     val email = userController.getAuth().currentUser!!.email
     var qrResult by remember { mutableStateOf<String?>(null) }
     var alimento by remember { mutableStateOf<Alimento?>(null) }
@@ -101,6 +103,13 @@ fun PrincipalScreen(
         qrResult = result.contents
         println("QR: $qrResult")
     })
+
+    //Opciones del scanner
+    var options = ScanOptions()
+    options.setPrompt("Enfoque a un codigo de barras de un alimento")
+    options.setBarcodeImageEnabled(true) //Para que pueda escanear codigos de barras
+    options.setDesiredBarcodeFormats(ScanOptions.PRODUCT_CODE_TYPES) // Solo escanear códigos de barras de productos
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -197,12 +206,13 @@ fun PrincipalScreen(
                 shape = CircleShape,
                 containerColor = Color(0xFF33B2A8),
                 onClick = {
-                    //Mostramos el scanner qr
-                    var options = ScanOptions()
-                    options.setPrompt("Enfoque a un codigo de barras de un alimento")
-                    options.setBarcodeImageEnabled(true) //Para que pueda escanear codigos de barras
-                    options.setDesiredBarcodeFormats(ScanOptions.PRODUCT_CODE_TYPES) // Solo escanear códigos de barras de productos
-                    scanLauncher.launch(options)
+                    println(conexion)
+                    if(conexion) {
+                        //Mostramos el scanner qr, siempre que tenga conexion
+                        scanLauncher.launch(options)
+                    }else{
+                        Toast.makeText(context,"Esta accion requiere conexion a Internet",Toast.LENGTH_SHORT).show()
+                    }
                 }
             ) {
                 Box(

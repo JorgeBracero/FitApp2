@@ -133,7 +133,8 @@ fun Navigation(
                     alimentoController,
                     regAlimentoController,
                     storeController,
-                    userController
+                    userController,
+                    catController
                 )
             }
         }

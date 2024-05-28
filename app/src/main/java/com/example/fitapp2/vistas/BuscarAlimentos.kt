@@ -90,6 +90,9 @@ import com.example.fitapp2.modelos.Rutas
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -113,6 +116,18 @@ fun BuscarScreen(
     var isLoading by remember { mutableStateOf(false) } // Variable para controlar el estado de carga
     val context = LocalContext.current
     var conexion = isConnectedToNetwork(context)
+
+    // Variable para almacenar el Job de la coroutine que llama a la API
+    var job by remember { mutableStateOf<Job?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Define a CoroutineExceptionHandler
+    val coroutineExceptionHandler = CoroutineExceptionHandler { _, exception ->
+        println("Exception handled: ${exception.localizedMessage}")
+        errorMessage = exception.localizedMessage
+        isLoading = false
+    }
 
     //Términos de búsqueda
     val size = 20
@@ -168,27 +183,31 @@ fun BuscarScreen(
             )
         }
 
+
         Spacer(modifier = Modifier.height(20.dp))
+
 
         // Llamada a la Api
         LaunchedEffect(query) {
             if (query.isNotBlank()) {
-                //PROCEDIMIENTO CON CONEXION A INTERNET
-                if(conexion) {
-                    isLoading = true // Mostrar indicador de carga
-                    val deferredAlimentos = apiCall(query = query, size = size)
-                    val alimentosResult = deferredAlimentos.await() // Espera a que se complete el Deferred y obtiene el resultado
-                    alimentos = alimentosResult as List<Alimento>
-                    isLoading = false // Ocultar indicador de carga
-                }else{
-                    println("Estas sin wifi")
-
-                    //Rellenamos la lista de alimentos con los alimentos de la base de datos
-                    alimentoController.getAlimentosLocal(query, { alimentosBuscados ->
-                        alimentos = alimentosBuscados
-                    })
-
-                    println(alimentos)
+                job?.cancel() // Cancelar cualquier coroutine anterior
+                job = coroutineScope.launch(coroutineExceptionHandler) {
+                    try {
+                        if (conexion) {
+                            isLoading = true // Mostrar indicador de carga
+                            val alimentosResult = apiCall(query, size).await()
+                            alimentos = alimentosResult.filterNotNull() // Filtrar nulos
+                        } else {
+                            println("Estas sin wifi")
+                            alimentoController.getAlimentosLocal(query) { alimentosBuscados ->
+                                alimentos = alimentosBuscados
+                            }
+                        }
+                    } catch (e: Exception) {
+                        errorMessage = e.message
+                    } finally {
+                        isLoading = false
+                    }
                 }
             }
         }
@@ -269,9 +288,7 @@ fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
             }
 
             // Esperar a que todas las llamadas asíncronas se completen
-            val alimentos = runBlocking {
-                deferredAlimentos.awaitAll()
-            }
+            val alimentos = deferredAlimentos.awaitAll()
 
             // Filtrar alimentos para eliminar duplicados basados en el nombre
             val alimentosFiltrados = alimentos.distinctBy { it!!.descAlimento.toLowerCase() }
@@ -280,11 +297,11 @@ fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
             alimentosTemp.addAll(alimentosFiltrados)
             println("Alimentos Buscados: $alimentosTemp")
         } catch (e: Exception) {
+            this.cancel()
             var error = "El servidor se encuentra en mantenimiento, no se pueden recuperar datos"
-            if(e.message == "timeout"){
-                error = "Refresca la busqueda, se le acabo el tiempo"
+            if (e.message == "timeout") {
+                error = "Refresca la búsqueda, se le acabó el tiempo"
             }
-
             println(error)
         }
 

@@ -101,6 +101,7 @@ class AlimentoController(db: FirebaseDatabase){
     fun getAlimentosDia(
         query: String,
         momentoDia: String,
+        categoriaSeleccionada: String,
         email: String,
         regAlimentoController: RegAlimentoController,
         callback: (List<Alimento>) -> Unit
@@ -133,12 +134,25 @@ class AlimentoController(db: FirebaseDatabase){
                                     }
                                 }
 
+                                var alimentosBuscados: List<Alimento> = emptyList()
                                 println("Alimentos temp fuera de change: $alimentosTemp")
-                                // Filtramos los alimentos por la búsqueda
-                                var alimentosBuscados = alimentosTemp.filter {
-                                    it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
-                                            it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
+
+                                // Filtramos los alimentos por la búsqueda y categorias
+                                if(categoriaSeleccionada != "Filtrar") {
+                                     alimentosBuscados = alimentosTemp.filter {
+                                         it.catsAlimento.contains(categoriaSeleccionada) &&
+                                                 (it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
+                                                it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase()))
+                                     }
+                                }else{
+                                    if(query.isNotEmpty()){
+                                        alimentosBuscados = alimentosTemp.filter {
+                                            it.descAlimento.toLowerCase().startsWith(query.toLowerCase()) ||
+                                                    it.marcaAlimento.toLowerCase().startsWith(query.toLowerCase())
+                                        }
+                                    }
                                 }
+
 
                                 println("Alimentos Buscados: $alimentosBuscados")
 
@@ -167,6 +181,7 @@ class AlimentoController(db: FirebaseDatabase){
         })
     }
 
+    /*
     //Metodo para mostrar las categorias disponibles a filtrar
     fun getCategoriasDia(
         momentoDia: String,
@@ -234,7 +249,7 @@ class AlimentoController(db: FirebaseDatabase){
                 callback(emptyList())
             }
         })
-    }
+    }*/
 
     //Devuelve la ref a mi tabla 'alimentos'
     fun getRefAlimentos(): DatabaseReference {

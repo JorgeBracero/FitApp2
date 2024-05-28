@@ -53,4 +53,33 @@ class CategoriaController(db: FirebaseDatabase){
             }
         })
     }
+
+    //Si la categoria ya existe, no la añade
+    fun getListaCategorias(callback: (MutableList<String>) -> Unit){
+        val categorias = mutableListOf<String>()
+        refCategorias.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    // Hay resultados en la consulta
+                    //Recorremos todos los usuarios, y comprobamos si alguno ha consumido el alimento en cuestion
+                    //En caso de que ningun otro usuario haya consumido este alimento, si se puede borrar
+                    categorias.add("Filtrar")
+                    snapshot.children.forEach { child ->
+                        val categoria = child.getValue(Categoria::class.java)
+                        if (categoria != null) {
+                            categorias.add(categoria.nomCategoria)
+                        }
+                    }
+                }
+
+                //Llamamos al callback
+                callback(categorias)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error al obtener la categoria: $error")
+                callback(categorias)
+            }
+        })
+    }
 }

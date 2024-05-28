@@ -1,13 +1,8 @@
 package com.example.fitapp2.vistas
 
-import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,12 +21,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -56,28 +49,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.fitapp2.R
 import com.example.fitapp2.controladores.AlimentoController
+import com.example.fitapp2.controladores.CategoriaController
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.modelos.Alimento
-import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +70,8 @@ fun AlimentosConsumidosScreen(
     alimentoController: AlimentoController,
     regAlimentoController: RegAlimentoController,
     storeController: StorageController,
-    userController: UsuarioController
+    userController: UsuarioController,
+    catController: CategoriaController
 ){
     var query by rememberSaveable { mutableStateOf("") }
     val email = userController.getAuth().currentUser!!.email
@@ -99,8 +83,8 @@ fun AlimentosConsumidosScreen(
 
 
     //Rellenamos la lista de categorias
-    alimentoController.getCategoriasDia(momentoDia,email!!,regAlimentoController,{ categoriasFiltradas ->
-        categorias = categoriasFiltradas
+    catController.getListaCategorias({
+        categorias = it
     })
 
 
@@ -184,12 +168,18 @@ fun AlimentosConsumidosScreen(
         }
 
         //Busqueda de productos, segun el momento del dia
-        if(query.isNotEmpty()){
-            LaunchedEffect(query) {
+        LaunchedEffect(query) {
+            if(query.isNotEmpty()) {
                 println(query)
-                alimentoController.getAlimentosDia(query, momentoDia, email!!, regAlimentoController, { alimentosBuscados ->
-                    alimentos = alimentosBuscados
-                })
+                alimentoController.getAlimentosDia(
+                    query,
+                    momentoDia,
+                    categoriaSeleccionada,
+                    email!!,
+                    regAlimentoController,
+                    { alimentosBuscados ->
+                        alimentos = alimentosBuscados
+                    })
             }
         }
 
@@ -235,7 +225,7 @@ fun panelCategorias(categorias: List<String>, onDismiss: () -> Unit, callback: (
         confirmButton = {},
         text = {
             Box(
-                modifier = Modifier.size(height = 180.dp, width = 170.dp)
+                modifier = Modifier.size(height = 180.dp, width = 270.dp)
             ) {
                 LazyColumn {
                     items(categorias) { cat ->
