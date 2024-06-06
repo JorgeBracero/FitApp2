@@ -2,6 +2,7 @@ package com.example.fitapp2.vistas
 
 
 import android.content.Context
+import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -70,57 +73,72 @@ import com.example.fitapp2.metodos.round
 import com.example.fitapp2.metodos.validarDatos
 import com.example.fitapp2.modelos.Rutas
 import com.example.fitapp2.modelos.Usuario
+import java.util.Locale
 
 
 @Composable
 fun LoginScreen(navController: NavController, userController: UsuarioController){
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    Column(
-            modifier = Modifier
-                .verticalScroll(state = scrollState)
-                .fillMaxSize()
-                .background(Color.Black),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.Bottom
-            ) {
-                Idiomas(context)
-            }
-            Text(
-                text = "FitApp",
-                color = Color.White,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = TextUnit(35f, TextUnitType.Sp),
-                style = MaterialTheme.typography.titleLarge
+    var idiomaActual by remember { mutableStateOf("es") }
+    var checkedTerminos by rememberSaveable { mutableStateOf(false) }
+    ProvideUpdatedLocale(idiomaActual,{
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ){
+            Image(
+                painter = painterResource(id = R.drawable.fondo4),
+                contentDescription = "Fondo",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            //Variables
-            val txtLogin = context.getString(R.string.btLog)
-            val txtInvitado = context.getString(R.string.btInvitado)
-            val idGoogle = R.drawable.logogoogle
-            val idInvitado = R.drawable.invitado
-
-            //Cards
-            LoginCard(context, navController, userController)
-            Spacer(modifier = Modifier.height(10.dp))
-            Tarjeta(txtInvitado, idInvitado, context, navController)
-            Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.End
+                    .verticalScroll(state = scrollState)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Divider()
-                Terminos(context)
+                /*Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Idiomas(context, { idiomaActual = it })
+                }*/
+                Text(
+                    text = "FitApp",
+                    color = Color.White,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = TextUnit(35f, TextUnitType.Sp),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                //Variables
+                val txtLogin = context.getString(R.string.btLog)
+                val txtInvitado = context.getString(R.string.btInvitado)
+                val idGoogle = R.drawable.logogoogle
+                val idInvitado = R.drawable.invitado
+
+                //Cards
+                LoginCard(context, navController, userController, checkedTerminos)
+                Spacer(modifier = Modifier.height(10.dp))
+                //Tarjeta(txtInvitado, idInvitado, context, navController)
+                Spacer(modifier = Modifier.height(150.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black),
+                    verticalArrangement = Arrangement.Bottom,
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Divider()
+                    Terminos(context, {
+                        checkedTerminos = it
+                    })
+                }
             }
-    }
+        }
+    })
 }
 
 
@@ -188,7 +206,12 @@ fun Tarjeta(texto: String, idImg: Int, context: Context, navController: NavContr
 
 //Diseño Login
 @Composable
-fun LoginCard(context: Context,navController: NavController,userController: UsuarioController){
+fun LoginCard(
+    context: Context,
+    navController: NavController,
+    userController: UsuarioController,
+    checkedTerminos: Boolean
+){
     var txtEmail by rememberSaveable { mutableStateOf("") }
     var txtPassword by rememberSaveable { mutableStateOf("") }
     var txtPeso by rememberSaveable { mutableStateOf("") }
@@ -214,6 +237,7 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
             ){
                 //Boton registro
                 Button(
+                    modifier = Modifier.weight(1f),
                     onClick = {
                         //Cambia el contenido del Card al del registro
                         reg = true
@@ -231,10 +255,9 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
                     )
                 }
 
-                Spacer(Modifier.width(191.dp))
-
                 //Boton login
                 Button(
+                    modifier = Modifier.weight(1f),
                     onClick = {
                         //Cambia el contenido del Card al del Login
                         reg = false
@@ -252,6 +275,8 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
                     )
                 }
             }
+
+            Spacer(Modifier.height(9.dp))
 
             //CONTENIDO
             //Logo
@@ -290,20 +315,10 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
                 Spacer(Modifier.height(7.dp))
                 txtEdad = CampoRegistro(label = "Edad*")
                 Spacer(Modifier.height(7.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ){
-                    Text(
-                        text = "Sexo",
-                        color = Color.Black,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    CampoSexo(txtSexo, {
-                        //Abre el dialogo
-                        showPanelSexo = true
-                    })
-                }
+                CampoSexo(txtSexo, {
+                    //Abre el dialogo
+                    showPanelSexo = true
+                })
             }
 
             if(showPanelSexo){
@@ -312,73 +327,97 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
                 })
             }
 
+            Spacer(Modifier.height(7.dp))
+
             //Boton de inicio de sesion/registro
             Button(
                 onClick = {
-                    //Logica para el registro/login de firebase, necesitas conexion wifi
-                    if(isConnectedToNetwork(context)) {
+                    //Necesitas haber validado antes los terminos de la aplicacion
+                    if(checkedTerminos) {
+                        //Logica para el registro/login de firebase, necesitas conexion wifi
                         if (reg) {
-                            userController.registrar(txtEmail, txtPassword) { success, error ->
-                                if (success) {
-                                    // Registro exitoso
-                                    //Comprobamos que los demas datos son correctos
-                                    val todoOk = validarDatos(txtPeso, txtAltura, txtEdad, nombreUser)
-                                    println(todoOk)
-                                    if (todoOk) {
-                                        //Navega a la pantalla principal
-                                        val pesoUser = getFloat(txtPeso).round(1)
-                                        val alturaUser = getFloat(txtAltura).round(2)
-                                        val edadUser = txtEdad.toInt()
+                        if (txtEmail.contains("@") && txtPassword.length >= 6 &&
+                                validarDatos(txtPeso, txtAltura, txtEdad, nombreUser)) {
+                            if (isConnectedToNetwork(context)) {
 
-                                        //Añadimos el nuevo usuario a nuestra tabla
-                                        //Extraemos primero el uid de nuestro usuario registrado
-                                        val uidUser = userController.getAuth().currentUser?.uid
-                                        val usuario = Usuario(
-                                            uidUser!!,
-                                            txtEmail,
-                                            nombreUser,
-                                            pesoUser,
-                                            alturaUser,
-                                            txtSexo,
-                                            edadUser,
-                                            "Predeterminada"
-                                        )
+                                    userController.registrar(txtEmail, txtPassword) { success, error ->
+                                        if (success) {
+                                            // Registro exitoso
+                                            //Comprobamos que los demas datos son correctos
+                                            //Navega a la pantalla principal
+                                            val pesoUser = getFloat(txtPeso).round(1)
+                                            val alturaUser = getFloat(txtAltura).round(2)
+                                            val edadUser = txtEdad.toInt()
 
-                                        println("Altura: $alturaUser")
-                                        println("Peso: $pesoUser")
-                                        println("Uid: $uidUser")
-                                        println("Usuario: $usuario")
+                                            //Añadimos el nuevo usuario a nuestra tabla
+                                            //Extraemos primero el uid de nuestro usuario registrado
+                                            val uidUser = userController.getAuth().currentUser?.uid
+                                            val usuario = Usuario(
+                                                    uidUser!!,
+                                                    txtEmail,
+                                                    nombreUser,
+                                                    pesoUser,
+                                                    alturaUser,
+                                                    txtSexo,
+                                                    edadUser,
+                                                    "Predeterminada"
+                                                )
 
-                                        userController.addOrUpdUsuario(usuario)
+                                                println("Altura: $alturaUser")
+                                                println("Peso: $pesoUser")
+                                                println("Uid: $uidUser")
+                                                println("Usuario: $usuario")
+
+                                                userController.addOrUpdUsuario(usuario)
+                                                navController.navigate(Rutas.PrincipalScreen.ruta)
+
+                                        } else {
+                                            // Error en el registro, muestra el mensaje de error
+                                            Toast.makeText(context, error, Toast.LENGTH_SHORT)
+                                                .show()
+                                        }
+                                    }
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Esta accion requiere conexion a Internet",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }else{
+                            //Si estos datos no son correctos
+                            Toast.makeText(
+                                context,
+                                "Peso, altura o nombre incorrectos",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
+                        } else {
+                            if (txtEmail.contains("@") && txtPassword.length >= 6) {
+                                userController.login(txtEmail, txtPassword) { success, error ->
+                                    if (success) {
+                                        // Login exitoso
                                         navController.navigate(Rutas.PrincipalScreen.ruta)
                                     } else {
-                                        //Si estos datos no son correctos
-                                        Toast.makeText(
-                                            context,
-                                            "Peso, altura o nombre incorrectos",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        // Error en el login, muestra el mensaje de error
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT)
+                                            .show()
                                     }
-                                } else {
-                                    // Error en el registro, muestra el mensaje de error
-                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
                                 }
-                            }
-                        } else {
-                            userController.login(txtEmail, txtPassword) { success, error ->
-                                if (success) {
-                                    // Login exitoso
-                                    navController.navigate(Rutas.PrincipalScreen.ruta)
-                                } else {
-                                    // Error en el login, muestra el mensaje de error
-                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                                }
+                            }else{
+                                //Si estos datos no son correctos
+                                Toast.makeText(
+                                    context,
+                                    "Email o contraseña incorrectos",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                     }else{
                         Toast.makeText(
                             context,
-                            "Esta accion requiere conexion a Internet",
+                            "Acepte los terminos de politica y servicio",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -402,7 +441,7 @@ fun LoginCard(context: Context,navController: NavController,userController: Usua
             //Olvidaste tu contraseña??
             if(!reg){
                 Text(
-                    text = AnnotatedString(text = "¿Olvidaste tu contraseña?. Pulsa aqui"),
+                    text = "¿Olvidaste tu contraseña?",
                     style = TextStyle(
                         color = Color.Blue,
                         fontWeight = FontWeight.ExtraBold
@@ -511,7 +550,8 @@ fun CampoContrasenia(): String {
 
 //Funcion para mostrar un combobox de los idiomas de la app
 @Composable
-fun Idiomas(context: Context) {
+fun Idiomas(context: Context, callback: (String) -> Unit) {
+    var idioma = "es"
     var selectedItem by rememberSaveable { mutableStateOf(0) }
     val items = listOf(
         context.getString(R.string.txtEspañol) to R.drawable.bespania,
@@ -560,14 +600,24 @@ fun Idiomas(context: Context) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ){
                     items.forEachIndexed { index, (text, imageId) ->
+                        Spacer(modifier = Modifier.height(15.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
                                     selectedItem = index
-                                    showPanel = false
                                     icon = Icons.Default.KeyboardArrowDown
+                                    if(items[selectedItem].first == "Ingles") {
+                                        idioma = "en"
+                                    }else{
+                                        if(items[selectedItem].first == "Frances") {
+                                            idioma = "fr"
+                                        }else{
+                                            idioma = "es"
+                                        }
+                                    }
+                                    showPanel = false
                                 }
                         ) {
                             Image(
@@ -577,15 +627,24 @@ fun Idiomas(context: Context) {
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(text = text)
-                            Spacer(modifier = Modifier.weight(1f))
+                            /*Spacer(modifier = Modifier.weight(1f))
                             RadioButton(
                                 selected = selectedItem == index,
                                 onClick = {
                                     selectedItem = index
                                     icon = Icons.Default.KeyboardArrowDown
+                                    if(items[selectedItem].first == "Ingles") {
+                                        idioma = "en"
+                                    }else{
+                                        if(items[selectedItem].first == "Frances") {
+                                            idioma = "fr"
+                                        }else{
+                                            idioma = "es"
+                                        }
+                                    }
                                     showPanel = false
                                 }
-                            )
+                            )*/
                         }
                         Divider()
                     }
@@ -594,12 +653,13 @@ fun Idiomas(context: Context) {
             containerColor = Color.DarkGray
         )
     }
+    callback(idioma)
 }
 
 
 //Funcion para mostrar los terminos de politica y servicio de nuestra app
 @Composable
-fun Terminos(context: Context) {
+fun Terminos(context: Context, callback: (Boolean) -> Unit) {
     var checked by rememberSaveable { mutableStateOf(false) }
     var showPanel by rememberSaveable { mutableStateOf(false) }
 
@@ -649,5 +709,28 @@ fun Terminos(context: Context) {
                 text = { Text(text = context.getString(R.string.ckTerminos)) }
             )
         }
+    }
+
+    callback(checked)
+}
+
+//Metodo para cambiar el idioma de la app
+fun setLocale(context: Context, languageCode: String) {
+    val locale = Locale(languageCode)
+    Locale.setDefault(locale)
+    val configuration = Configuration(context.resources.configuration)
+    configuration.setLocale(locale)
+    context.resources.updateConfiguration(configuration, context.resources.displayMetrics)
+}
+
+@Composable
+fun ProvideUpdatedLocale(languageCode: String, content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val updatedContext = remember(languageCode) {
+        setLocale(context, languageCode)
+        context
+    }
+    CompositionLocalProvider(LocalContext provides updatedContext) {
+        content()
     }
 }

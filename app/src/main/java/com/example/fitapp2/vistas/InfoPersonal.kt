@@ -1,9 +1,11 @@
 package com.example.fitapp2.vistas
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -42,7 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,6 +55,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.fitapp2.R
 import com.example.fitapp2.controladores.RegAlimentoController
 import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.metodos.getFloat
@@ -110,103 +116,125 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
                         )
                     }
                 )
+            },
+            bottomBar = {
+                BottomAppBar(
+                    content = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ){
+                            Text(text = "Informacion Personal")
+                        }
+                    },
+                    containerColor = Color.Black,
+                    contentColor = Color.White
+                )
             }
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(it)
-                    .background(Color.DarkGray),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier.fillMaxSize()
             ) {
-                FieldEmail(usuarioActual!!.email)
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Field(label = "Peso", valor = txtPeso, onChange = {txtPeso = it})
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Field(label = "Altura", valor = txtAltura, onChange = {txtAltura = it})
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Field(label = "Edad", valor = txtEdad, onChange = {txtEdad = it})
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Text(
-                    text = "Sexo",
-                    fontSize = TextUnit(15f, TextUnitType.Sp),
-                    fontWeight = FontWeight.ExtraBold
+                Image(
+                    painter = painterResource(id = R.drawable.fondo5),
+                    contentDescription = "Fondo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
-                CampoSexo(sexoUser, {
-                    //Abre el dialogo
-                    showPanelSexo = true
-                })
-                Spacer(modifier = Modifier.height(15.dp))
-                Field(label = "Nombre de usuario", valor = nombreUser, onChange = {nombreUser = it})
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(it),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    FieldEmail(usuarioActual!!.email)
+                    Spacer(modifier = Modifier.height(15.dp))
 
-                //Panel sexo
-                if (showPanelSexo) {
-                    panelSexo({ showPanelSexo = false }, {
-                        sexoUser = it
+                    Field(label = "Peso", valor = txtPeso, onChange = { txtPeso = it })
+                    Spacer(modifier = Modifier.height(15.dp))
+
+                    Field(label = "Altura", valor = txtAltura, onChange = { txtAltura = it })
+                    Spacer(modifier = Modifier.height(15.dp))
+
+                    Field(label = "Edad", valor = txtEdad, onChange = { txtEdad = it })
+                    Spacer(modifier = Modifier.height(15.dp))
+                    CampoSexo(sexoUser, {
+                        //Abre el dialogo
+                        showPanelSexo = true
                     })
-                }
+                    Spacer(modifier = Modifier.height(15.dp))
+                    Field(
+                        label = "Nombre de usuario",
+                        valor = nombreUser,
+                        onChange = { nombreUser = it })
 
-                Spacer(modifier = Modifier.height(30.dp))
+                    //Panel sexo
+                    if (showPanelSexo) {
+                        panelSexo({ showPanelSexo = false }, {
+                            sexoUser = it
+                        })
+                    }
 
-                //Boton para guardar los cambios
-                Button(
-                    onClick = {
-                        if (isConnectedToNetwork(context)) {
-                            //Actualiza los valores para ese usuario en la BD, siempre que tenga conexion
-                            if (validarDatos(txtPeso, txtAltura, txtEdad, nombreUser)) {
-                                val nuevoPeso = getFloat(txtPeso).round(1)
-                                val nuevaAltura = getFloat(txtAltura).round(2)
-                                val nuevaEdad = txtEdad.toInt()
-                                val usuarioMod = Usuario(
-                                    usuarioActual!!.uid,
-                                    usuarioActual!!.email,
-                                    nombreUser,
-                                    nuevoPeso,
-                                    nuevaAltura,
-                                    sexoUser,
-                                    nuevaEdad,
-                                    usuarioActual!!.fotoPerfil
-                                )
-                                userController.addOrUpdUsuario(usuarioMod) //Actualiza ese mismo usuario
-                                Toast.makeText(
-                                    context,
-                                    "Datos modificados correctamente",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    //Boton para guardar los cambios
+                    Button(
+                        onClick = {
+                            if (isConnectedToNetwork(context)) {
+                                //Actualiza los valores para ese usuario en la BD, siempre que tenga conexion
+                                if (validarDatos(txtPeso, txtAltura, txtEdad, nombreUser)) {
+                                    val nuevoPeso = getFloat(txtPeso).round(1)
+                                    val nuevaAltura = getFloat(txtAltura).round(2)
+                                    val nuevaEdad = txtEdad.toInt()
+                                    val usuarioMod = Usuario(
+                                        usuarioActual!!.uid,
+                                        usuarioActual!!.email,
+                                        nombreUser,
+                                        nuevoPeso,
+                                        nuevaAltura,
+                                        sexoUser,
+                                        nuevaEdad,
+                                        usuarioActual!!.fotoPerfil
+                                    )
+                                    userController.addOrUpdUsuario(usuarioMod) //Actualiza ese mismo usuario
+                                    Toast.makeText(
+                                        context,
+                                        "Datos modificados correctamente",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Los datos son incorrectos, no se pueden guardar los cambios",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             } else {
                                 Toast.makeText(
                                     context,
-                                    "Los datos son incorrectos, no se pueden guardar los cambios",
+                                    "Esta accion requiere conexion a Internet",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "Esta accion requiere conexion a Internet",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Gray
-                    )
-                ) {
-                    Text(
-                        text = "Guardar cambios",
-                        fontWeight = FontWeight.ExtraBold
-                    )
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Gray
+                        )
+                    ) {
+                        Text(
+                            text = "Guardar cambios",
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Field(label: String, valor: String, onChange: (String) -> Unit) {
     var teclado = KeyboardOptions.Default
@@ -220,28 +248,40 @@ fun Field(label: String, valor: String, onChange: (String) -> Unit) {
 
     OutlinedTextField(
         value = valor,
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            containerColor = Color.White
+        ),
         onValueChange = onChange,
         label = { Text(text = label) },
         keyboardOptions = teclado
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FieldEmail(email: String) {
     OutlinedTextField(
         value = email,
         onValueChange = {},
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            containerColor = Color.White
+        ),
         label = { Text(text = "Email") },
         readOnly = true //El email no se puede modificar
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampoSexo(sexo: String, onClick: () -> Unit){
     var icon by remember { mutableStateOf(Icons.Default.KeyboardArrowDown) }
     OutlinedTextField(
         value = sexo,
         onValueChange = {},
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            containerColor = Color.White
+        ),
+        label = {Text(text = "Sexo")},
         trailingIcon = {
             Icon(
                 imageVector = icon,
@@ -261,8 +301,8 @@ fun CampoSexo(sexo: String, onClick: () -> Unit){
 //Muestra un dialog para elegir el sexo, luego devuelve la eleccion
 @Composable
 fun panelSexo(onDismiss: () -> Unit, callback: (String) -> Unit) {
-    var selectedItem by rememberSaveable { mutableStateOf(0) }
     val items = listOf("H","M")
+    var selectedItem by rememberSaveable { mutableStateOf(0) }
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {},
@@ -273,6 +313,7 @@ fun panelSexo(onDismiss: () -> Unit, callback: (String) -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
                 items.forEach { item ->
+                    Spacer(modifier = Modifier.height(15.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -281,22 +322,22 @@ fun panelSexo(onDismiss: () -> Unit, callback: (String) -> Unit) {
                                 println("Antes de cambiar: $selectedItem")
                                 selectedItem = items.indexOf(item)
                                 println("Despues de actualizar: $selectedItem")
-                                onDismiss() //Cerramos el dialog
                                 callback(items[selectedItem])
+                                onDismiss() //Cerramos el dialog
                             }
                     ) {
                         Text(text = item)
-                        Spacer(modifier = Modifier.weight(1f))
+                        /*Spacer(modifier = Modifier.weight(1f))
                         RadioButton(
                             selected = selectedItem == items.indexOf(item),
                             onClick = {
                                 println("Antes de cambiar: $selectedItem")
                                 selectedItem = items.indexOf(item)
                                 println("Despues de actualizar: $selectedItem")
-                                onDismiss() //Cerramos el dialog
                                 callback(items[selectedItem])
+                                onDismiss() //Cerramos el dialog
                             }
-                        )
+                        )*/
                     }
                     Divider()
                 }

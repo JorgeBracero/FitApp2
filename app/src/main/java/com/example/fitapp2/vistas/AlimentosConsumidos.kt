@@ -1,5 +1,6 @@
 package com.example.fitapp2.vistas
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -27,6 +28,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -35,8 +37,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,11 +54,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.fitapp2.R
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.CategoriaController
 import com.example.fitapp2.controladores.RegAlimentoController
@@ -80,6 +89,7 @@ fun AlimentosConsumidosScreen(
     var alimentos by rememberSaveable { mutableStateOf<List<Alimento>>(emptyList()) }
     var categorias by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
     var categoriaSeleccionada by rememberSaveable { mutableStateOf("Filtrar") }
+    //val context = LocalContext.current
 
 
     //Rellenamos la lista de categorias
@@ -88,128 +98,167 @@ fun AlimentosConsumidosScreen(
     })
 
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .padding(8.dp)
-    ){
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = momentoDia,
-                color = Color.White,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = TextUnit(30f, TextUnitType.Sp)
-            )
-            Spacer(Modifier.width(60.dp))
-            //Boton para filtrar la busqueda por categoria
-            Button(
-                onClick = {
-                    //Abre el dialogo para seleccionar una categoria
-                    showCategorias = true
-                }
-            ) {
-                Text(text = categoriaSeleccionada)
-            }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.padding(6.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = {
-                    query = it
-                    showClear = it.trim().isNotEmpty()
-                    if (query.isEmpty()) {
-                        alimentos = emptyList()
-                    }
-                },
-                shape = RoundedCornerShape(8.dp),
-                label = { Text(text = "Alimentos") },
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.White,
-                    cursorColor = Color.Blue
-                ),
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Busqueda",
-                        tint = Color.Black
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = momentoDia,
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = TextUnit(30f, TextUnitType.Sp)
                     )
                 },
-                trailingIcon = {
-                    if (showClear) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Limpiar busqueda",
-                            tint = Color.Black,
-                            modifier = Modifier.clickable {
-                                query = ""
-                                showClear = false //Si limpia el texto lo volvemos a ocultar
-                                alimentos = emptyList()
-                            }
-                        )
+                colors = TopAppBarDefaults.smallTopAppBarColors(
+                    containerColor = Color.Black,
+                    titleContentColor = Color.White
+                )
+            )
+        },
+        bottomBar = {
+            BottomAppBar(
+                content = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Text(text = "Alimentos del $momentoDia")
                     }
-                }
+                },
+                containerColor = Color.Black,
+                contentColor = Color.White
             )
         }
-
-        //Panel categorias
-        if(showCategorias){
-            panelCategorias(categorias, {showCategorias = false}, {categoriaSeleccionada = it})
-        }
-
-        //Busqueda de productos, segun el momento del dia
-        LaunchedEffect(query) {
-            if(query.isNotEmpty()) {
-                println(query)
-                alimentoController.getAlimentosDia(
-                    query,
-                    momentoDia,
-                    categoriaSeleccionada,
-                    email!!,
-                    regAlimentoController,
-                    { alimentosBuscados ->
-                        alimentos = alimentosBuscados
-                    })
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.padding(start = 10.dp),
-            horizontalArrangement = Arrangement.Center
+    ){
+        Box(
+            modifier = Modifier.fillMaxSize()
+                .padding(6.dp)
         ) {
-            //LISTA DE ALIMENTOS
-            if (alimentos.isNotEmpty()) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
+            Image(
+                painter = painterResource(id = R.drawable.fondo5),
+                contentDescription = "Fondo",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it)
+            ) {
+                Row(
+                    modifier = Modifier.padding(6.dp)
                 ) {
-                    items(alimentos) { alimento ->
-                        DiseñoAlimento(
-                            navController,
-                            alimento,
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = {
+                            query = it
+                            showClear = it.trim().isNotEmpty()
+                            if (query.isEmpty()) {
+                                alimentos = emptyList()
+                            }
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        label = { Text(text = "Alimentos") },
+                        colors = TextFieldDefaults.textFieldColors(
+                            containerColor = Color.White,
+                            cursorColor = Color.Blue
+                        ),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Busqueda",
+                                tint = Color.Black
+                            )
+                        },
+                        trailingIcon = {
+                            if (showClear) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Limpiar busqueda",
+                                    tint = Color.Black,
+                                    modifier = Modifier.clickable {
+                                        query = ""
+                                        showClear = false //Si limpia el texto lo volvemos a ocultar
+                                        alimentos = emptyList()
+                                    }
+                                )
+                            }
+                        }
+                    )
+                }
+
+
+                //Boton para filtrar la busqueda por categoria
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Cyan,
+                        contentColor = Color.White
+                    ),
+                    onClick = {
+                        //Abre el dialogo para seleccionar una categoria
+                        showCategorias = true
+                    }
+                ) {
+                    Text(text = categoriaSeleccionada)
+                }
+
+
+                //Panel categorias
+                if (showCategorias) {
+                    panelCategorias(
+                        categorias,
+                        { showCategorias = false },
+                        { categoriaSeleccionada = it })
+                }
+
+
+                //Busqueda de productos, segun el momento del dia
+                LaunchedEffect(query) {
+                    if (query.isNotEmpty()) {
+                        println(query)
+                        alimentoController.getAlimentosDia(
+                            query,
                             momentoDia,
-                            alimentoController,
+                            categoriaSeleccionada,
+                            email!!,
                             regAlimentoController,
-                            storeController,
-                            userController
-                        )
-                        Divider()
+                            { alimentosBuscados ->
+                                alimentos = alimentosBuscados
+                            })
                     }
                 }
-            } else {
-                Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.padding(start = 10.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    //LISTA DE ALIMENTOS
+                    if (alimentos.isNotEmpty()) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            items(alimentos) { alimento ->
+                                DiseñoAlimento(
+                                    navController,
+                                    alimento,
+                                    momentoDia,
+                                    alimentoController,
+                                    regAlimentoController,
+                                    storeController,
+                                    userController
+                                )
+                                Divider()
+                            }
+                        }
+                    } else {
+                        Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
+                    }
+                }
             }
         }
     }
@@ -229,6 +278,7 @@ fun panelCategorias(categorias: List<String>, onDismiss: () -> Unit, callback: (
             ) {
                 LazyColumn {
                     items(categorias) { cat ->
+                        Spacer(modifier = Modifier.height(15.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -242,7 +292,7 @@ fun panelCategorias(categorias: List<String>, onDismiss: () -> Unit, callback: (
                                 }
                         ) {
                             Text(text = cat)
-                            Spacer(modifier = Modifier.weight(1f))
+                            /*Spacer(modifier = Modifier.weight(1f))
                             RadioButton(
                                 selected = selectedItem == categorias.indexOf(cat),
                                 onClick = {
@@ -252,7 +302,7 @@ fun panelCategorias(categorias: List<String>, onDismiss: () -> Unit, callback: (
                                     callback(categorias[selectedItem])
                                     onDismiss() //Cerramos el dialog
                                 }
-                            )
+                            )*/
                         }
                         Divider()
                     }
@@ -324,6 +374,7 @@ fun DiseñoAlimento(
                     )
                 }
 
+                Spacer(Modifier.width(10.dp))
 
                 Button(
                     onClick = {
@@ -387,9 +438,10 @@ fun DiseñoAlimento(
                     )
                 }
 
+                Spacer(Modifier.width(10.dp))
 
                 Column(
-                    modifier = Modifier.padding(10.dp),
+                    modifier = Modifier.padding(8.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ){
@@ -495,6 +547,7 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ema
                 horizontalAlignment = Alignment.CenterHorizontally
             ){
                 items.forEach { item ->
+                    Spacer(modifier = Modifier.height(15.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -515,7 +568,7 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ema
                             }
                     ) {
                         Text(text = item)
-                        Spacer(modifier = Modifier.weight(1f))
+                        /*Spacer(modifier = Modifier.weight(1f))
                         RadioButton(
                             selected = selectedItem == items.indexOf(item),
                             onClick = {
@@ -529,7 +582,7 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ema
                                 //Navegamos a principal
                                 navController.navigate(Rutas.PrincipalScreen.ruta)
                             }
-                        )
+                        )*/
                     }
                     Divider()
                 }

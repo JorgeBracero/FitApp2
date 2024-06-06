@@ -47,12 +47,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -70,12 +73,16 @@ import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 
@@ -100,9 +107,22 @@ fun PrincipalScreen(
     var elegirMomentoDia by remember { mutableStateOf(false) }
     var guardarProducto by remember { mutableStateOf(false) }
     val scanLauncher = rememberLauncherForActivityResult(contract = ScanContract(), onResult = { result ->
-        qrResult = result.contents
-        println("QR: $qrResult")
+        if(result.contents != null) {
+            qrResult = result.contents
+            println("QR: $qrResult")
+        }
     })
+
+    // Variable para almacenar el Job de la coroutine que llama a la API
+    var job by remember { mutableStateOf<Job?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Define a CoroutineExceptionHandler
+    val coroutineExceptionHandler = CoroutineExceptionHandler { _, exception ->
+        println("Exception handled: ${exception.localizedMessage}")
+        errorMessage = exception.localizedMessage
+    }
 
     //Opciones del scanner
     var options = ScanOptions()
@@ -114,16 +134,7 @@ fun PrincipalScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(horizontalArrangement = Arrangement.Center) {
-                        Text(text = context.getString(R.string.txtPrincipal), color = Color.White)
-                    }
-                },
-                navigationIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Menu",
-                        tint = Color.White
-                    )
+                    Text(text = context.getString(R.string.txtPrincipal))
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
                     containerColor = Color.Black,
@@ -136,7 +147,7 @@ fun PrincipalScreen(
                 content = {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceAround
                     ){
                         Column(verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally){
@@ -182,6 +193,7 @@ fun PrincipalScreen(
                             Text(text = context.getString(R.string.txtInformes))
                         }
 
+                        /*
                         Column(verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally){
                             Icon(
@@ -193,7 +205,7 @@ fun PrincipalScreen(
                                 //Navega al album de fotos
                             )
                             Text(text = "Album")
-                        }
+                        }*/
                     }
                 },
                 containerColor = Color.Black,
@@ -231,132 +243,173 @@ fun PrincipalScreen(
         },
         floatingActionButtonPosition = FabPosition.End
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            Text(text = "Seleccione un momento del dia, para añadir, eliminar o buscar alimentos")
-            Spacer(Modifier.height(10.dp))
-            TarjetaDia(context.getString(R.string.txtDesayuno), R.drawable.desayuno,navController)
-            TarjetaDia(context.getString(R.string.txtAlmuerzo), R.drawable.almuerzo,navController)
-            TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena,navController)
-
-            //Si encuentra un codigo de barras, procedemos a validarlo
-            //Una vez tenemos el codigo de barras, buscamos el producto en la api
-            //Si el producto existe en la Api, le solicitamos al usuario si desea guardarlo
-            //Si lo desea guardar se almacena en la base de datos
-            //En caso contrario, indicamos que no existe y se acaba el proceso
-            LaunchedEffect(qrResult){
-                if(qrResult != null) {
-                    val deferredAlimento = buscarProductoApi(qrResult!!)
-                    val alimentoResult = deferredAlimento.await() // Espera a que se complete el Deferred y obtiene el resultado
-                    alimento = alimentoResult
-                    println("Alimento recogido: $alimento")
-                    showProducto = true
+            Image(
+                painter = painterResource(id = R.drawable.fondo5),
+                contentDescription = "Fondo",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(text = "Seleccione un momento del dia, para añadir, eliminar o buscar alimentos")
                 }
-            }
+                Spacer(Modifier.height(40.dp))
+                TarjetaDia(
+                    context.getString(R.string.txtDesayuno),
+                    R.drawable.desayuno,
+                    navController
+                )
+                TarjetaDia(
+                    context.getString(R.string.txtAlmuerzo),
+                    R.drawable.almuerzo,
+                    navController
+                )
+                TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena, navController)
+
+                //Si encuentra un codigo de barras, procedemos a validarlo
+                //Una vez tenemos el codigo de barras, buscamos el producto en la api
+                //Si el producto existe en la Api, le solicitamos al usuario si desea guardarlo
+                //Si lo desea guardar se almacena en la base de datos
+                //En caso contrario, indicamos que no existe y se acaba el proceso
+                LaunchedEffect(qrResult) {
+                    if (qrResult != null) {
+                        job?.cancel() // Cancelar cualquier coroutine anterior
+                        job = coroutineScope.launch(coroutineExceptionHandler) {
+                            try {
+                                val alimentoResult =
+                                    buscarProductoApi(qrResult!!).await() // Espera a que se complete el Deferred
+                                alimento = alimentoResult //y obtiene el resultado
+                                println("Alimento recogido: $alimento")
+                                showProducto = true
+                            } catch (e: Exception) {
+                                errorMessage = e.message
+                                Toast.makeText(
+                                    context,
+                                    "El producto no se encuentra en la Api",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
+                }
 
 
-            if(showProducto){
-                AlertDialog(
-                    onDismissRequest = {showProducto = false},
-                    confirmButton = {
-                        if(alimento != null) {
+                if (showProducto) {
+                    AlertDialog(
+                        onDismissRequest = { showProducto = false },
+                        confirmButton = {
+                            if (alimento != null) {
+                                Button(
+                                    onClick = {
+                                        //Lo guarda en la Base de datos
+                                        //Si el alimento cumple todos estos requisitos, se puede guardar
+                                        if (alimento!!.catsAlimento.isNotEmpty() && alimento!!.imgAlimento.isNotEmpty()
+                                            && alimento!!.ingredientes[0].idIng.isNotEmpty()
+                                            && (alimento!!.nutrientes.calorias != 0.0
+                                                    && !alimento!!.descAlimento.toLowerCase()
+                                                .contains("agua"))
+                                        ) {
+                                            //El agua es el unico alimento que no tiene calorias
+                                            guardarProducto = true //En este caso se puede guardar
+                                        } else { //En caso contrario
+                                            Toast.makeText(
+                                                context,
+                                                "El alimento esta incompleto",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                        showProducto = false //Cierra el dialog
+                                    }
+                                ) {
+                                    Text(text = "Guardar")
+                                }
+                            }
+                        },
+                        dismissButton = {
                             Button(
                                 onClick = {
                                     //Lo guarda en la Base de datos
-                                    //Si el alimento cumple todos estos requisitos, se puede guardar
-                                    if(alimento!!.catsAlimento.isNotEmpty() && alimento!!.imgAlimento.isNotEmpty()
-                                        && alimento!!.ingredientes[0].idIng.isNotEmpty()
-                                        && (alimento!!.nutrientes.calorias != 0.0
-                                                && !alimento!!.descAlimento.toLowerCase().contains("agua"))) {
-                                        //El agua es el unico alimento que no tiene calorias
-                                        guardarProducto = true //En este caso se puede guardar
-                                    }else{ //En caso contrario
-                                        Toast.makeText(context,"El alimento esta incompleto",Toast.LENGTH_SHORT).show()
-                                    }
                                     showProducto = false //Cierra el dialog
                                 }
                             ) {
-                                Text(text = "Guardar")
+                                Text(text = if (alimento == null) "Salir" else "Cancelar")
                             }
-                        }
-                    },
-                    dismissButton = {
-                        Button(
-                            onClick = {
-                                //Lo guarda en la Base de datos
-                                showProducto = false //Cierra el dialog
-                            }
-                        ) {
-                            Text(text = if(alimento == null) "Salir" else "Cancelar")
-                        }
-                    },
-                    title = {
-                        Text(
-                            text = if(alimento == null) "Error"
-                            else alimento!!.descAlimento
-                        )
-                    },
-                    text = {
-                        if(alimento == null) {
+                        },
+                        title = {
                             Text(
-                                text = "No se ha encontrado el producto"
+                                text = if (alimento == null) "Error"
+                                else alimento!!.descAlimento
                             )
-                        }
+                        },
+                        text = {
+                            if (alimento == null) {
+                                Text(
+                                    text = "No se ha encontrado el producto"
+                                )
+                            }
 
-                        if(alimento != null) {
-                            OutlinedTextField(
-                                label = {Text(text = "Elige el momento del dia en el cual lo quieres guardar:")},
-                                value = momentoDia,
-                                onValueChange = {},
-                                trailingIcon = {
-                                    Icon(
-                                        imageVector = icon,
-                                        contentDescription = "",
-                                        tint = Color.White,
-                                        modifier = Modifier.clickable {
-                                            //Abre el dialogo
-                                            icon = Icons.Default.KeyboardArrowUp
-                                            elegirMomentoDia = true
-                                        }
-                                    )
-                                },
-                                readOnly = true
-                            )
+                            if (alimento != null) {
+                                OutlinedTextField(
+                                    label = { Text(text = "Elige el momento del dia en el cual lo quieres guardar:") },
+                                    value = momentoDia,
+                                    onValueChange = {},
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = icon,
+                                            contentDescription = "",
+                                            tint = Color.White,
+                                            modifier = Modifier.clickable {
+                                                //Abre el dialogo
+                                                icon = Icons.Default.KeyboardArrowUp
+                                                elegirMomentoDia = true
+                                            }
+                                        )
+                                    },
+                                    readOnly = true
+                                )
+                            }
                         }
-                    }
-                )
-            }
+                    )
+                }
 
-            if(elegirMomentoDia){
-                var selectedItem by remember {mutableStateOf(0)}
-                val items: List<String> = listOf("Desayuno","Almuerzo","Cena")
-                AlertDialog(
-                    onDismissRequest = {elegirMomentoDia = false},
-                    confirmButton = {},
-                    text = {
-                        Column(
-                            modifier = Modifier.padding(8.dp),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ){
-                            items.forEach { item ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            selectedItem = items.indexOf(item)
-                                            icon = Icons.Default.KeyboardArrowDown
-                                            momentoDia = items[selectedItem]
-                                            elegirMomentoDia = false
-                                        }
-                                ) {
-                                    Text(text = item)
-                                    Spacer(modifier = Modifier.weight(1f))
+                if (elegirMomentoDia) {
+                    var selectedItem by remember { mutableStateOf(0) }
+                    val items: List<String> = listOf("Desayuno", "Almuerzo", "Cena")
+                    AlertDialog(
+                        onDismissRequest = { elegirMomentoDia = false },
+                        confirmButton = {},
+                        text = {
+                            Column(
+                                modifier = Modifier.padding(8.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                items.forEach { item ->
+                                    Spacer(modifier = Modifier.height(15.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                selectedItem = items.indexOf(item)
+                                                icon = Icons.Default.KeyboardArrowDown
+                                                momentoDia = items[selectedItem]
+                                                elegirMomentoDia = false
+                                            }
+                                    ) {
+                                        Text(text = item)
+                                        /*Spacer(modifier = Modifier.weight(1f))
                                     RadioButton(
                                         selected = selectedItem == items.indexOf(item),
                                         onClick = {
@@ -365,28 +418,37 @@ fun PrincipalScreen(
                                             momentoDia = items[selectedItem]
                                             elegirMomentoDia = false //Cerramos el dialog
                                         }
-                                    )
+                                    )*/
+                                    }
+                                    Divider()
                                 }
-                                Divider()
                             }
-                        }
-                    },
-                    containerColor = Color.DarkGray
-                )
-            }
+                        },
+                        containerColor = Color.DarkGray
+                    )
+                }
 
-            if(guardarProducto){
-                storeController.subirImagen(alimento!!, alimentoController, catController)
+                if (guardarProducto) {
+                    storeController.subirImagen(alimento!!, alimentoController, catController)
 
-                //Por ultimo subo el registro de ese alimento, compruebo que ya no tenga uno para ese mismo usuario
-                val regAlimento = RegAlimento(idAlimento = alimento!!.idAlimento, email = email!!,momentoDia = momentoDia, cantidad = 1)
-                println(regAlimento)
-                regAlimentoController.alimentoConsumidoUsuario(alimento!!,email, {alimentoConsumido ->
-                    if(!alimentoConsumido){ //Si el alimento no ha sido consumido por el usuario, lo añadimos
-                        regAlimentoController.addRegAlimento(regAlimento)
-                        println("Añadido correctamente")
-                    }
-                })
+                    //Por ultimo subo el registro de ese alimento, compruebo que ya no tenga uno para ese mismo usuario
+                    val regAlimento = RegAlimento(
+                        idAlimento = alimento!!.idAlimento,
+                        email = email!!,
+                        momentoDia = momentoDia,
+                        cantidad = 1
+                    )
+                    println(regAlimento)
+                    regAlimentoController.alimentoConsumidoUsuario(
+                        alimento!!,
+                        email,
+                        { alimentoConsumido ->
+                            if (!alimentoConsumido) { //Si el alimento no ha sido consumido por el usuario, lo añadimos
+                                regAlimentoController.addRegAlimento(regAlimento)
+                                println("Añadido correctamente")
+                            }
+                        })
+                }
             }
         }
     }
@@ -425,6 +487,7 @@ fun buscarProductoApi(qrCode: String): Deferred<Alimento?> {
                 println("Alimento no encontrado en la api")
             }
         } catch (e: Exception) {
+            this.cancel()
             var error = "El servidor se encuentra en mantenimiento, no se pueden recuperar datos"
             if(e.message == "timeout"){
                 error = "Refresca la busqueda, se le acabo el tiempo"

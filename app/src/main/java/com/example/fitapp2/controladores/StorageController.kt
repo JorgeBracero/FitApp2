@@ -190,7 +190,7 @@ class StorageController {
                 contentScale = ContentScale.Crop
             )
         }else{
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = Color.White)
         }
     }
 

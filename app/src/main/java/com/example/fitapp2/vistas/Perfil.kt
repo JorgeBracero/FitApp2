@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -53,6 +54,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
@@ -111,11 +113,10 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                 TopAppBar(
                     title = {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(10.dp)
-                        ) {
-                            Text(text = context.getString(R.string.txtPerfil), color = Color.White)
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ){
+                            Text(text = context.getString(R.string.txtPerfil))
                         }
                     },
                     navigationIcon = {
@@ -147,12 +148,10 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                     content = {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ){
+                            Column(verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally){
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = "Perfil",
@@ -162,52 +161,50 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                 Text(text = context.getString(R.string.txtPerfil))
                             }
 
-                            Column(
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            Column(verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally){
                                 Icon(
                                     imageVector = Icons.Default.Home,
                                     contentDescription = "Inicio",
                                     tint = Color.White,
-                                    modifier = Modifier
-                                        .size(45.dp)
+                                    modifier = Modifier.size(45.dp)
                                         .clickable {
-                                            //Navega a la pantalla principal
-                                            navController.navigate(route = Rutas.PrincipalScreen.ruta)
+                                            navController.navigate(Rutas.PrincipalScreen.ruta)
                                         }
                                 )
                                 Text(text = "Inicio")
                             }
 
-                            Column(
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            Column(verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally){
                                 Icon(
                                     imageVector = Icons.Default.Info,
                                     contentDescription = "Informes",
                                     tint = Color.White,
-                                    modifier = Modifier.size(45.dp)
+                                    modifier = Modifier
+                                        .size(45.dp)
                                         .clickable {
                                             navController.navigate(Rutas.InformesScreen.ruta)
                                         }
+
+                                    //Navega a Informes
                                 )
                                 Text(text = context.getString(R.string.txtInformes))
                             }
 
-                            Column(
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            /*
+                            Column(verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally){
                                 Icon(
                                     painter = painterResource(id = R.drawable.baseline_photo_24),
                                     contentDescription = "Album",
                                     tint = Color.White,
                                     modifier = Modifier.size(45.dp)
+
+                                    //Navega al album de fotos
                                 )
                                 Text(text = "Album")
-                            }
+                            }*/
                         }
                     },
                     containerColor = Color.Black,
@@ -215,81 +212,91 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                 )
             }
         ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Aquí puedes colocar el contenido principal de tu pantalla
-                Box(
+                Image(
+                    painter = painterResource(id = R.drawable.fondo5),
+                    contentDescription = "Fondo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Column(
                     modifier = Modifier
-                        .padding(10.dp)
-                        .fillMaxWidth()
+                        .padding(innerPadding),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    // Aquí puedes colocar el contenido principal de tu pantalla
+                    Box(
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth()
                     ) {
-                        Button(
-                            onClick = {
-                                //Boton para editar la foto de perfil al usuario
-                                showGaleria = true
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Black
-                            ),
-                            shape = RoundedCornerShape(20.dp)
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_add_a_photo_24),
-                                contentDescription = "Editar foto",
-                                tint = Color.White,
-                                modifier = Modifier.size(35.dp)
-                            )
-                        }
-                        Text(text = context.getString(R.string.txtEdFoto))
-                    }
-                }
-
-
-                TarjetaPersonal(context.getString(R.string.txtPeso), navController)
-                Spacer(Modifier.height(10.dp))
-                TarjetaPersonal("Informacion personal", navController)
-
-                Spacer(Modifier.height(80.dp))
-
-                //Boton de cierre de sesion
-                Button(
-                    onClick = {
-                        if (isConnectedToNetwork(context)) {
-                            userController.cerrarSesion({ sucess, error ->
-                                if (sucess) {
-                                    //Si el cierre de sesion es correcto, navega al login
-                                    navController.navigate(Rutas.LoginScreen.ruta)
-                                } else {
-                                    //En caso contrario, mostramos el mensaje de error
-                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                                }
-                            })
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "Esta accion requiere conexion a Internet",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Button(
+                                onClick = {
+                                    //Boton para editar la foto de perfil al usuario
+                                    showGaleria = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Black
+                                ),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_add_a_photo_24),
+                                    contentDescription = "Editar foto",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(35.dp)
+                                )
+                            }
+                            Text(text = context.getString(R.string.txtEdFoto))
                         }
                     }
-                ) {
-                    Text(
-                        text = "Cerrar sesion",
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                }
 
-                //Si el usuario elige una imagen, navega a la ruta principal
-                if(selectedImageUri != null){
-                    navController.navigate(Rutas.PrincipalScreen.ruta)
+
+                    TarjetaPersonal(context.getString(R.string.txtPeso), navController)
+                    Spacer(Modifier.height(10.dp))
+                    TarjetaPersonal("Informacion personal", navController)
+
+                    Spacer(Modifier.height(80.dp))
+
+                    //Boton de cierre de sesion
+                    Button(
+                        onClick = {
+                            if (isConnectedToNetwork(context)) {
+                                userController.cerrarSesion({ sucess, error ->
+                                    if (sucess) {
+                                        //Si el cierre de sesion es correcto, navega al login
+                                        navController.navigate(Rutas.LoginScreen.ruta)
+                                    } else {
+                                        //En caso contrario, mostramos el mensaje de error
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                    }
+                                })
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Esta accion requiere conexion a Internet",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    ) {
+                        Text(
+                            text = "Cerrar sesion",
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+
+                    //Si el usuario elige una imagen, navega a la ruta principal
+                    if (selectedImageUri != null) {
+                        navController.navigate(Rutas.PrincipalScreen.ruta)
+                    }
                 }
             }
         }

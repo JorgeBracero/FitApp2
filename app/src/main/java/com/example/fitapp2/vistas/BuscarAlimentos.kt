@@ -70,14 +70,25 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavDeepLinkRequest
+import com.example.fitapp2.R
 import com.example.fitapp2.controladores.AlimentoController
 import com.example.fitapp2.controladores.CategoriaController
 import com.example.fitapp2.controladores.RegAlimentoController
@@ -132,130 +143,187 @@ fun BuscarScreen(
     //Términos de búsqueda
     val size = 20
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            OutlinedTextField(
-                value = query,
-                onValueChange = {
-                    query = it
-                    showClear = it.trim().isNotEmpty()
-                    if(query.isEmpty()){
-                        isLoading = false
-                        alimentos = emptyList()
-                    }
-                },
-                shape = RoundedCornerShape(8.dp),
-                label = { Text(text = "Alimentos") },
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.White,
-                    cursorColor = Color.Blue
-                ),
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Busqueda",
-                        tint = Color.Black
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Buscar Alimentos",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = TextUnit(30f, TextUnitType.Sp)
                     )
                 },
-                trailingIcon = {
-                    if(showClear) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Limpiar busqueda",
-                            tint = Color.Black,
-                            modifier = Modifier.clickable {
-                                query = ""
-                                showClear = false //Si limpia el texto lo volvemos a ocultar
-                                alimentos = emptyList()
-                            }
-                        )
+                colors = TopAppBarDefaults.smallTopAppBarColors(
+                    containerColor = Color.Black,
+                    titleContentColor = Color.White
+                )
+            )
+        },
+        bottomBar = {
+            BottomAppBar(
+                content = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ){
+                        Text(text = "Busqueda de Alimentos\nApi Open Food Facts")
                     }
-                }
+                },
+                containerColor = Color.Black,
+                contentColor = Color.White
             )
         }
-
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-
-        // Llamada a la Api
-        LaunchedEffect(query) {
-            if (query.isNotBlank()) {
-                job?.cancel() // Cancelar cualquier coroutine anterior
-                job = coroutineScope.launch(coroutineExceptionHandler) {
-                    try {
-                        if (conexion) {
-                            isLoading = true // Mostrar indicador de carga
-                            val alimentosResult = apiCall(query, size).await()
-                            alimentos = alimentosResult.filterNotNull() // Filtrar nulos
-                        } else {
-                            println("Estas sin wifi")
-                            alimentoController.getAlimentosLocal(query) { alimentosBuscados ->
-                                alimentos = alimentosBuscados
+    ){
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.fondo5),
+                contentDescription = "Fondo",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = {
+                            query = it
+                            showClear = it.trim().isNotEmpty()
+                            if (query.isEmpty()) {
+                                isLoading = false
+                                alimentos = emptyList()
+                            }
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        label = { Text(text = "Alimentos") },
+                        colors = TextFieldDefaults.textFieldColors(
+                            containerColor = Color.White,
+                            cursorColor = Color.Blue
+                        ),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Busqueda",
+                                tint = Color.Black
+                            )
+                        },
+                        trailingIcon = {
+                            if (showClear) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Limpiar busqueda",
+                                    tint = Color.Black,
+                                    modifier = Modifier.clickable {
+                                        query = ""
+                                        showClear = false //Si limpia el texto lo volvemos a ocultar
+                                        alimentos = emptyList()
+                                    }
+                                )
                             }
                         }
-                    } catch (e: Exception) {
-                        errorMessage = e.message
-                    } finally {
-                        isLoading = false
-                    }
+                    )
                 }
-            }
-        }
 
 
-        //Pantalla
-        if(isLoading){
-            CircularProgressIndicator(modifier = Modifier.size(50.dp))
-        }else{
-            if (alimentos.isNotEmpty()) {
-                //RecyclerView
-                LazyColumn(
-                    modifier = Modifier
-                        .background(color = Color.White)
-                        .padding(15.dp)
-                ) {
-                    //Cargamos el recyclerview con la lista de alimentos
-                    items(items = alimentos) { alimento ->
-                        var alimentoCorrecto = alimento != null && alimento.imgAlimento != null &&
-                                alimento.imgAlimento.isNotEmpty() && alimento.descAlimento != null &&
-                                alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
-                                alimento.marcaAlimento.isNotEmpty() && isValidUrl(alimento.imgAlimento)
+                Spacer(modifier = Modifier.height(20.dp))
 
-                        if(!conexion){
-                            alimentoCorrecto = alimento != null && alimento.imgAlimento != null &&
-                                    alimento.imgAlimento.isNotEmpty() && alimento.descAlimento != null &&
-                                    alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
-                                    alimento.marcaAlimento.isNotEmpty()
-                        }
 
-                        if(alimentoCorrecto){
-                            CardALimento(
-                                context,
-                                navController,
-                                alimento,
-                                momentoDia,
-                                alimentoController,
-                                regAlimentoController,
-                                storeController,
-                                userController,
-                                catController,
-                                conexion
-                            ) //Creamos un card para cada uno
+                // Llamada a la Api
+                LaunchedEffect(query) {
+                    if (query.isNotBlank()) {
+                        job?.cancel() // Cancelar cualquier coroutine anterior
+                        job = coroutineScope.launch(coroutineExceptionHandler) {
+                            try {
+                                if (conexion) {
+                                    isLoading = true // Mostrar indicador de carga
+                                    val alimentosResult = apiCall(query, size).await()
+                                    alimentos = alimentosResult.filterNotNull() // Filtrar nulos
+                                } else {
+                                    println("Estas sin wifi")
+                                    alimentoController.getAlimentosLocal(query) { alimentosBuscados ->
+                                        alimentos = alimentosBuscados
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                errorMessage = e.message
+                            } finally {
+                                isLoading = false
+                            }
                         }
                     }
                 }
-            }else{
-                Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
+
+
+                //Pantalla
+                if (isLoading) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "Cargando alimentos...")
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(50.dp),
+                            color = Color.White
+                        )
+                    }
+                } else {
+                    if (alimentos.isNotEmpty()) {
+                        Text(text = "Alimentos filtrados: $size")
+                        //RecyclerView
+                        LazyColumn(
+                            modifier = Modifier.padding(15.dp)
+                        ) {
+                            //Cargamos el recyclerview con la lista de alimentos
+                            items(items = alimentos) { alimento ->
+                                var alimentoCorrecto =
+                                    alimento != null && alimento.imgAlimento != null &&
+                                            alimento.imgAlimento.isNotEmpty() && alimento.descAlimento != null &&
+                                            alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
+                                            alimento.marcaAlimento.isNotEmpty() && isValidUrl(
+                                        alimento.imgAlimento
+                                    )
+
+                                if (!conexion) {
+                                    alimentoCorrecto =
+                                        alimento != null && alimento.imgAlimento != null &&
+                                                alimento.imgAlimento.isNotEmpty() && alimento.descAlimento != null &&
+                                                alimento.descAlimento.isNotEmpty() && alimento.marcaAlimento != null &&
+                                                alimento.marcaAlimento.isNotEmpty()
+                                }
+
+                                if (alimentoCorrecto) {
+                                    CardALimento(
+                                        context,
+                                        navController,
+                                        alimento,
+                                        momentoDia,
+                                        alimentoController,
+                                        regAlimentoController,
+                                        storeController,
+                                        userController,
+                                        catController,
+                                        conexion
+                                    ) //Creamos un card para cada uno
+                                }
+                            }
+                        }
+                    } else {
+                        Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
+                    }
+                }
             }
         }
     }
@@ -353,24 +421,23 @@ fun CardALimento(
                 }
             },
         colors = CardDefaults.cardColors(
-            containerColor = Color.DarkGray,
-            contentColor = Color.White
+            containerColor = Color.White,
+            contentColor = Color.Black
         ),
         shape = RoundedCornerShape(8.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ){
             Text(
-                text = "Producto: ${alimento.descAlimento}",
-                fontSize = TextUnit(16f, TextUnitType.Sp)
+                text = "${alimento.descAlimento}",
+                fontSize = TextUnit(28f, TextUnitType.Sp)
             ) //Nombre del alimento
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ){
+            Text(
+                text = "${alimento.marcaAlimento}",
+                fontSize = TextUnit(22f, TextUnitType.Sp)
+            ) //Marca del alimento
             //Imagen del alimento
             if(conexion) {
                 ImgAlimentoUrl(url = alimento.imgAlimento) //Imagen del alimento dada una url, con conexion
@@ -378,38 +445,24 @@ fun CardALimento(
                 println("Imagen sin conexion: ${alimento.imgAlimento}")
                 storeController.mostrarImagen(context = context, img = alimento.imgAlimento, size = 70.dp)
             }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = "Marca: ${alimento.marcaAlimento}",
-                    fontSize = TextUnit(16f, TextUnitType.Sp)
-                ) //Marca del alimento
 
-                //Si tenemos conexion, podra guardar el usuario el producto en la base de datos
-                if(conexion && !alimentoGuardado) {
-                    //Boton para guardar el producto en nuestra base de datos en la tabla 'Alimentos'
-                    Button(onClick = {
+            //Si tenemos conexion, podra guardar el usuario el producto en la base de datos
+            if(conexion && !alimentoGuardado) {
+                //Boton para guardar el producto en nuestra base de datos en la tabla 'Alimentos'
+                Button(
+                    onClick = {
                         imgSubida = true //Se puede subir la imagen
-                        /*
-                        botonBloqueado = true
-                        // Desbloquear el botón después de 5 segundos
-                        coroutineScope.launch {
-                            delay(5000)
-                            botonBloqueado = false
-                        }*/
-                    }) {
-                        Text(text = "Guardar")
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Cyan,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(text = "Guardar")
                 }
             }
         }
     }
-
-    /*
-    if(botonBloqueado){
-        // Bloquear el botón de retroceso
-        BloquearBotonRetroceso()
-    }*/
 
     //Si la descarga de la imagen ha ido bien, se sigue con el proceso de guardado
     if(imgSubida){
@@ -425,24 +478,6 @@ fun CardALimento(
                 println("Añadido correctamente")
             }
         })
-    }
-}
-
-
-//Descargar Imagen del alimento del Firebase Storage
-@Composable
-fun ImgAlimentoStorage(img: String, storeController: StorageController) {
-    val bitmap = storeController.getBitmapImagen(LocalContext.current,img)
-
-    if(bitmap != null) {
-        val bitmapPainter = bitmap.asImageBitmap()
-
-        Image(
-            bitmap = bitmapPainter,
-            contentDescription = null
-        )
-    }else{
-        Text(text = "No se puede cargar la imagen.")
     }
 }
 
