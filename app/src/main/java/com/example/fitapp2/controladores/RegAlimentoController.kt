@@ -316,6 +316,7 @@ class RegAlimentoController(db: FirebaseDatabase){
             if(listaAlimentos != null && listaAlimentos.size > 0){
                 //Recorremos cada alimento, y extraemos la cantidad consumida
                 listaAlimentos.forEach { alimento ->
+                    println("Alimento a extraer sus nutrientes")
                     if(alimento != null && alimento.idAlimento.isNotEmpty()){
                         //Obtenemos la cantidad consumida de ese alimento
                         obtenerCantidadAlimentoBD(alimento,email,{ cantidadBD ->
@@ -330,6 +331,7 @@ class RegAlimentoController(db: FirebaseDatabase){
                             }
                         })
                     }
+                    println("Nutrientes por el momento: $listaNutrientes")
                 }
 
                 //Una vez terminado el proceso, llamamos al callback

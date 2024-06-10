@@ -86,6 +86,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavDeepLinkRequest
 import com.example.fitapp2.R
@@ -152,7 +153,7 @@ fun BuscarScreen(
                         color = Color.White,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = TextUnit(30f, TextUnitType.Sp)
+                        fontSize = TextUnit(23f, TextUnitType.Sp)
                     )
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
@@ -160,28 +161,13 @@ fun BuscarScreen(
                     titleContentColor = Color.White
                 )
             )
-        },
-        bottomBar = {
-            BottomAppBar(
-                content = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Text(text = "Busqueda de Alimentos\nApi Open Food Facts")
-                    }
-                },
-                containerColor = Color.Black,
-                contentColor = Color.White
-            )
         }
     ){
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.fondo5),
+                painter = painterResource(id = R.drawable.fondo),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -273,15 +259,19 @@ fun BuscarScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "Cargando alimentos...")
+                        Text(
+                            text = "Cargando alimentos...",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(18f, TextUnitType.Sp)
+                        )
                         CircularProgressIndicator(
-                            modifier = Modifier.size(50.dp),
+                            modifier = Modifier.size(80.dp),
                             color = Color.White
                         )
                     }
                 } else {
                     if (alimentos.isNotEmpty()) {
-                        Text(text = "Alimentos filtrados: $size")
                         //RecyclerView
                         LazyColumn(
                             modifier = Modifier.padding(15.dp)
@@ -321,7 +311,12 @@ fun BuscarScreen(
                             }
                         }
                     } else {
-                        Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
+                        Text(
+                            text = "No se encontraron alimentos con su criterio de búsqueda.",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(16f, TextUnitType.Sp)
+                        )
                     }
                 }
             }
@@ -427,38 +422,56 @@ fun CardALimento(
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(
+            modifier = Modifier.padding(start = 5.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ){
             Text(
                 text = "${alimento.descAlimento}",
+                fontWeight = FontWeight.ExtraBold,
                 fontSize = TextUnit(28f, TextUnitType.Sp)
             ) //Nombre del alimento
             Text(
                 text = "${alimento.marcaAlimento}",
+                fontWeight = FontWeight.ExtraBold,
                 fontSize = TextUnit(22f, TextUnitType.Sp)
             ) //Marca del alimento
-            //Imagen del alimento
-            if(conexion) {
-                ImgAlimentoUrl(url = alimento.imgAlimento) //Imagen del alimento dada una url, con conexion
-            }else{
-                println("Imagen sin conexion: ${alimento.imgAlimento}")
-                storeController.mostrarImagen(context = context, img = alimento.imgAlimento, size = 70.dp)
-            }
 
-            //Si tenemos conexion, podra guardar el usuario el producto en la base de datos
-            if(conexion && !alimentoGuardado) {
-                //Boton para guardar el producto en nuestra base de datos en la tabla 'Alimentos'
-                Button(
-                    onClick = {
-                        imgSubida = true //Se puede subir la imagen
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Cyan,
-                        contentColor = Color.White
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                //Imagen del alimento
+                if (conexion) {
+                    ImgAlimentoUrl(url = alimento.imgAlimento) //Imagen del alimento dada una url, con conexion
+                } else {
+                    println("Imagen sin conexion: ${alimento.imgAlimento}")
+                    storeController.mostrarImagen(
+                        context = context,
+                        img = alimento.imgAlimento,
+                        size = 70.dp
                     )
-                ) {
-                    Text(text = "Guardar")
+                }
+
+                Spacer(Modifier.width(7.dp))
+
+                //Si tenemos conexion, podra guardar el usuario el producto en la base de datos
+                if (conexion && !alimentoGuardado) {
+                    //Boton para guardar el producto en nuestra base de datos en la tabla 'Alimentos'
+                    Button(
+                        onClick = {
+                            imgSubida = true //Se puede subir la imagen
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Cyan,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(
+                            text = "Guardar",
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
                 }
             }
         }

@@ -89,7 +89,6 @@ fun AlimentosConsumidosScreen(
     var alimentos by rememberSaveable { mutableStateOf<List<Alimento>>(emptyList()) }
     var categorias by rememberSaveable { mutableStateOf<List<String>>(emptyList()) }
     var categoriaSeleccionada by rememberSaveable { mutableStateOf("Filtrar") }
-    //val context = LocalContext.current
 
 
     //Rellenamos la lista de categorias
@@ -107,7 +106,7 @@ fun AlimentosConsumidosScreen(
                         color = Color.White,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
-                        fontSize = TextUnit(30f, TextUnitType.Sp)
+                        fontSize = TextUnit(23f, TextUnitType.Sp)
                     )
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
@@ -115,29 +114,15 @@ fun AlimentosConsumidosScreen(
                     titleContentColor = Color.White
                 )
             )
-        },
-        bottomBar = {
-            BottomAppBar(
-                content = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Text(text = "Alimentos del $momentoDia")
-                    }
-                },
-                containerColor = Color.Black,
-                contentColor = Color.White
-            )
         }
     ){
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(6.dp)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.fondo5),
+                painter = painterResource(id = R.drawable.fondo),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -256,7 +241,12 @@ fun AlimentosConsumidosScreen(
                             }
                         }
                     } else {
-                        Text(text = "No se encontraron alimentos con su criterio de búsqueda.")
+                        Text(
+                            text = "No se encontraron alimentos con su criterio de búsqueda.",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(16f, TextUnitType.Sp)
+                        )
                     }
                 }
             }
@@ -291,18 +281,12 @@ fun panelCategorias(categorias: List<String>, onDismiss: () -> Unit, callback: (
                                     onDismiss() //Cerramos el dialog
                                 }
                         ) {
-                            Text(text = cat)
-                            /*Spacer(modifier = Modifier.weight(1f))
-                            RadioButton(
-                                selected = selectedItem == categorias.indexOf(cat),
-                                onClick = {
-                                    println("Antes de cambiar: $selectedItem")
-                                    selectedItem = categorias.indexOf(cat)
-                                    println("Despues de actualizar: $selectedItem")
-                                    callback(categorias[selectedItem])
-                                    onDismiss() //Cerramos el dialog
-                                }
-                            )*/
+                            Text(
+                                text = cat,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = TextUnit(15f, TextUnitType.Sp)
+                            )
                         }
                         Divider()
                     }
@@ -313,6 +297,7 @@ fun panelCategorias(categorias: List<String>, onDismiss: () -> Unit, callback: (
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiseñoAlimento(
     navController: NavController,
@@ -346,6 +331,7 @@ fun DiseñoAlimento(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(Color.White)
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onLongPress = {
@@ -361,7 +347,8 @@ fun DiseñoAlimento(
                     Text(
                         text = alimento.descAlimento,
                         style = MaterialTheme.typography.titleLarge,
-                        fontSize = TextUnit(20f, TextUnitType.Sp),
+                        color = Color.Black,
+                        fontSize = TextUnit(25f, TextUnitType.Sp),
                         modifier = Modifier.clickable {
                             //Navego a los detalles de ese alimento
                             navController.navigate(Rutas.DetallesScreen.ruta + "/${alimento.idAlimento}")
@@ -369,9 +356,31 @@ fun DiseñoAlimento(
                     )
                     Text(
                         text = alimento.marcaAlimento,
+                        color = Color.Black,
                         style = MaterialTheme.typography.titleMedium,
-                        fontSize = TextUnit(10f, TextUnitType.Sp)
+                        fontSize = TextUnit(15f, TextUnitType.Sp)
                     )
+
+                    //Boton para eliminar el alimento
+                    if (isHolding) {
+                        Button(
+                            onClick = {
+                                //Borra el alimento deseado
+                                //Muestra un Panel para eliminarlo
+                                borrarAlimento = true
+                                isHolding = false
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Black
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = "Borrar Alimento",
+                                tint = Color.Red
+                            )
+                        }
+                    }
                 }
 
                 Spacer(Modifier.width(10.dp))
@@ -381,17 +390,19 @@ fun DiseñoAlimento(
                         if (cantidad > 1) {
                             cantidad--
 
-                            //Update en la BD
-                            regAlimentoController.actualizarCantidadBD(alimento, email,cantidad)
+                            //Actualizamos la cantidad en la BD
+                            regAlimentoController.actualizarCantidadBD(alimento,email,cantidad)
                         }
                     },
                     modifier = Modifier.graphicsLayer(alpha = opacidad),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.DarkGray
+                        containerColor = Color.Black,
+                        contentColor = Color.White
                     )
                 ) {
                     Text(
                         text = "-",
+                        fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                 }
@@ -399,7 +410,9 @@ fun DiseñoAlimento(
                 Column {
                     Text(
                         text = "Cantidad",
-                        fontSize = TextUnit(10f, TextUnitType.Sp)
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = TextUnit(15f, TextUnitType.Sp)
                     )
 
                     Text(
@@ -411,7 +424,7 @@ fun DiseñoAlimento(
                             }
                         },
                         fontWeight = FontWeight.Bold,
-                        fontSize = TextUnit(20f, TextUnitType.Sp)
+                        fontSize = TextUnit(22f, TextUnitType.Sp)
                     )
 
                 }
@@ -424,11 +437,12 @@ fun DiseñoAlimento(
                         }
                         cantidad++
 
-                        //Update en la BD
-                        regAlimentoController.actualizarCantidadBD(alimento, email,cantidad)
+                        //Actualizamos la cantidad en la BD
+                        regAlimentoController.actualizarCantidadBD(alimento,email,cantidad)
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.DarkGray
+                        containerColor = Color.Black,
+                        contentColor = Color.White
                     )
                 ) {
                     Icon(
@@ -456,6 +470,9 @@ fun DiseñoAlimento(
                         },
                         value = momentoDia,
                         onValueChange = {},
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color.Black
+                        ),
                         trailingIcon = {
                             Icon(
                                 imageVector = icon,
@@ -470,29 +487,9 @@ fun DiseñoAlimento(
                         },
                         readOnly = true
                     )
-
-                    //Boton para eliminar el alimento
-                    if (isHolding) {
-                        Button(
-                            onClick = {
-                                //Borra el alimento deseado
-                                //Muestra un Panel para eliminarlo
-                                borrarAlimento = true
-                                isHolding = false
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.DarkGray
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = "Borrar Alimento",
-                                tint = Color.White
-                            )
-                        }
-                    }
                 }
         }
+
 
         if(actMomentoDia){
             panelMomentoDia(navController,momentoDia,email,alimento, regAlimentoController,{actMomentoDia = false},{icon = Icons.Default.KeyboardArrowDown})
@@ -567,22 +564,11 @@ private fun panelMomentoDia(navController: NavController,momentoDia: String, ema
                                 navController.navigate(Rutas.PrincipalScreen.ruta)
                             }
                     ) {
-                        Text(text = item)
-                        /*Spacer(modifier = Modifier.weight(1f))
-                        RadioButton(
-                            selected = selectedItem == items.indexOf(item),
-                            onClick = {
-                                selectedItem = items.indexOf(item)
-                                //Actualizamos si modifica el momento del dia
-                                if(items[selectedItem] != momentoDia) {
-                                    regAlimentoController.actualizarMomentoDiaBD(alimento, email,items[selectedItem]) //Actualizamos en la base de datos
-                                }
-                                cambiarIcono()
-                                onDismiss() //Cerramos el dialog
-                                //Navegamos a principal
-                                navController.navigate(Rutas.PrincipalScreen.ruta)
-                            }
-                        )*/
+                        Text(
+                            text = item,
+                            fontSize = TextUnit(18f, TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Divider()
                 }
@@ -601,11 +587,11 @@ private fun panelBorrarAlimento(onDismiss: () -> Unit, borradoBD: () -> Unit){
             Button(
                 onClick = borradoBD,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue,
+                    containerColor = Color.Red,
                     contentColor = Color.White
                 )
             ){
-                Text(text = "Aceptar")
+                Text(text = "Borrar")
             }
         },
         title = {

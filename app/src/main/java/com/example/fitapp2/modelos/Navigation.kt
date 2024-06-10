@@ -13,7 +13,6 @@ import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.vistas.AlimentosConsumidosScreen
 import com.example.fitapp2.vistas.BuscarScreen
-import com.example.fitapp2.vistas.DatosInicialesScreen
 import com.example.fitapp2.vistas.DetallesScreen
 import com.example.fitapp2.vistas.InfoPersonalScreen
 import com.example.fitapp2.vistas.InformesScreen
@@ -22,6 +21,7 @@ import com.example.fitapp2.vistas.PasswordScreen
 import com.example.fitapp2.vistas.PerfilScreen
 import com.example.fitapp2.vistas.PesoScreen
 import com.example.fitapp2.vistas.PrincipalScreen
+import com.example.fitapp2.vistas.RegistroScreen
 
 //Gestor de navegacion entre las pantallas de la app
 @Composable
@@ -54,6 +54,11 @@ fun Navigation(
             }
         }
 
+        //REGISTRO
+        composable(route = Rutas.RegistroScreen.ruta){
+            RegistroScreen(navController, userController)
+        }
+
         //INICIO
         composable(route = Rutas.PrincipalScreen.ruta){
             PrincipalScreen(
@@ -71,17 +76,6 @@ fun Navigation(
             PerfilScreen(navController,userController,storeController)
         }
 
-        //DATOS INICIALES
-        composable(route = Rutas.DatosInicialesScreen.ruta + "/{usuario}",
-            arguments = listOf(navArgument(name = "usuario") {
-                type = NavType.StringType
-            })) {
-            it.arguments?.let { it1 ->
-                DatosInicialesScreen(
-                    navController,
-                    it1.getString("usuario", "")
-                ) }
-        }
 
         //BUSCAR
         composable(route = Rutas.BuscarScreen.ruta + "/{momentoDia}",

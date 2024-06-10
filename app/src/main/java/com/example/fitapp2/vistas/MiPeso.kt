@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -30,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.R
@@ -62,7 +66,13 @@ fun PesoScreen(navController: NavController, userController: UsuarioController) 
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier.padding(10.dp)
                         ) {
-                            Text(text = "Informacion sobre el peso", color = Color.White)
+                            Text(
+                                text = "Informacion sobre el peso",
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = TextUnit(20f, TextUnitType.Sp)
+                            )
                         }
                     },
                     navigationIcon = {
@@ -80,28 +90,13 @@ fun PesoScreen(navController: NavController, userController: UsuarioController) 
                         titleContentColor = Color.White
                     )
                 )
-            },
-            bottomBar = {
-                BottomAppBar(
-                    content = {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ){
-                            Text(text = "Mi Peso")
-                        }
-                    },
-                    containerColor = Color.Black,
-                    contentColor = Color.White
-                )
             }
         ) { innerPadding ->
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.fondo5),
+                    painter = painterResource(id = R.drawable.fondo),
                     contentDescription = "Fondo",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -112,10 +107,34 @@ fun PesoScreen(navController: NavController, userController: UsuarioController) 
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "Peso Actual: ${usuarioActual!!.peso}")
-                    Text(text = "IMC: ${calcularIMC(usuarioActual!!)}")
-                    Text(text = "TMB: ${calcularTMB(usuarioActual!!)}")
-                    Text(text = "Categoria IMC: ${categoriaIMC(usuarioActual!!)}")
+                    Text(
+                        text = "Peso Actual: ${usuarioActual!!.peso}",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = TextUnit(25f, TextUnitType.Sp)
+                    )
+                    Text(
+                        text = "IMC: ${calcularIMC(usuarioActual!!)}",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = TextUnit(25f, TextUnitType.Sp)
+                    )
+                    Text(
+                        text = "TMB: ${calcularTMB(usuarioActual!!)}",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = TextUnit(25f, TextUnitType.Sp)
+                    )
+                    Text(
+                        text = "Categoria IMC: ${categoriaIMC(usuarioActual!!)}",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = TextUnit(25f, TextUnitType.Sp)
+                    )
                 }
             }
         }

@@ -55,6 +55,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
@@ -116,30 +118,28 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ){
-                            Text(text = context.getString(R.string.txtPerfil))
+                            Text(
+                                text = context.getString(R.string.txtPerfil),
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = TextUnit(23f, TextUnitType.Sp)
+                            )
                         }
-                    },
-                    navigationIcon = {
-                        //Descargamos la imagen del usuario actual y la mostramos
-                        storeController.mostrarImagen(context, usuarioActual!!.fotoPerfil, 55.dp)
                     },
                     colors = TopAppBarDefaults.smallTopAppBarColors(
                         containerColor = Color.Black,
                         titleContentColor = Color.White
                     ),
                     actions = {
-                        if(showGaleria) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_photo_24),
-                                contentDescription = "Galeria",
-                                tint = Color.White,
-                                modifier = Modifier.clickable {
-                                    //Mostramos la galeria
-                                    getImage.launch("image/*")
-                                    showGaleria = false
-                                }.size(45.dp)
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_add_a_photo_24),
+                            contentDescription = "Editar foto",
+                            tint = Color.White,
+                            modifier = Modifier.clickable {
+                                showGaleria = true
+                            }.size(35.dp)
+                        )
                     }
                 )
             },
@@ -155,10 +155,14 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                 Icon(
                                     imageVector = Icons.Default.Person,
                                     contentDescription = "Perfil",
-                                    tint = Color.White,
+                                    tint = Color.Cyan,
                                     modifier = Modifier.size(45.dp)
                                 )
-                                Text(text = context.getString(R.string.txtPerfil))
+                                Text(
+                                    text = context.getString(R.string.txtPerfil),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.Cyan
+                                )
                             }
 
                             Column(verticalArrangement = Arrangement.Center,
@@ -172,7 +176,10 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                             navController.navigate(Rutas.PrincipalScreen.ruta)
                                         }
                                 )
-                                Text(text = "Inicio")
+                                Text(
+                                    text = "Inicio",
+                                    fontWeight = FontWeight.ExtraBold
+                                )
                             }
 
                             Column(verticalArrangement = Arrangement.Center,
@@ -184,27 +191,15 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                     modifier = Modifier
                                         .size(45.dp)
                                         .clickable {
+                                            //Navega a Informes
                                             navController.navigate(Rutas.InformesScreen.ruta)
                                         }
-
-                                    //Navega a Informes
                                 )
-                                Text(text = context.getString(R.string.txtInformes))
+                                Text(
+                                    text = context.getString(R.string.txtInformes),
+                                    fontWeight = FontWeight.ExtraBold
+                                )
                             }
-
-                            /*
-                            Column(verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally){
-                                Icon(
-                                    painter = painterResource(id = R.drawable.baseline_photo_24),
-                                    contentDescription = "Album",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(45.dp)
-
-                                    //Navega al album de fotos
-                                )
-                                Text(text = "Album")
-                            }*/
                         }
                     },
                     containerColor = Color.Black,
@@ -216,7 +211,7 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                 modifier = Modifier.fillMaxSize()
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.fondo5),
+                    painter = painterResource(id = R.drawable.fondo),
                     contentDescription = "Fondo",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -233,28 +228,27 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                             .padding(10.dp)
                             .fillMaxWidth()
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Button(
-                                onClick = {
-                                    //Boton para editar la foto de perfil al usuario
-                                    showGaleria = true
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Black
-                                ),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.baseline_add_a_photo_24),
-                                    contentDescription = "Editar foto",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(35.dp)
-                                )
+                            //Descargamos la imagen del usuario actual y la mostramos
+                            storeController.mostrarImagen(context, usuarioActual!!.fotoPerfil, 100.dp)
+                            Spacer(Modifier.width(12.dp))
+                            if(showGaleria) {
+                                Button(
+                                    onClick = {
+                                        //Mostramos la galeria
+                                        showGaleria = false
+                                        getImage.launch("image/*")
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Cyan,
+                                        contentColor = Color.White
+                                    )
+                                ){
+                                    Text(text = context.getString(R.string.txtEdFoto))
+                                }
                             }
-                            Text(text = context.getString(R.string.txtEdFoto))
                         }
                     }
 
@@ -285,7 +279,11 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Red,
+                            contentColor = Color.White
+                        )
                     ) {
                         Text(
                             text = "Cerrar sesion",
@@ -331,7 +329,13 @@ fun TarjetaPersonal(titulo: String,navController: NavController){
             horizontalArrangement = Arrangement.Center,
         ){
             Button(
-                onClick = {},
+                onClick = {
+                    if (titulo.equals("Informacion personal")) {
+                        navController.navigate(Rutas.InfoPersonalScreen.ruta) //Navega a la pantalla de info personal
+                    }else{
+                        navController.navigate(Rutas.PesoScreen.ruta) //Navega a la pantalla de Mi Peso
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Black
                 ),
@@ -355,7 +359,9 @@ fun TarjetaPersonal(titulo: String,navController: NavController){
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = titulo,
-                color = Color.White
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = TextUnit(16f, TextUnitType.Sp)
             )
             Spacer(modifier = Modifier.width(50.dp))
             Icon(

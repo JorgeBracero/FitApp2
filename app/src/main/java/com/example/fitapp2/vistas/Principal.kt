@@ -23,11 +23,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -37,9 +37,9 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -55,10 +55,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.fitapp2.R
 import com.example.fitapp2.apiService.ApiServiceFactory
@@ -79,9 +79,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -134,7 +132,13 @@ fun PrincipalScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = context.getString(R.string.txtPrincipal))
+                    Text(
+                        text = context.getString(R.string.txtPrincipal),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = TextUnit(23f, TextUnitType.Sp)
+                    )
                 },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
                     containerColor = Color.Black,
@@ -162,7 +166,10 @@ fun PrincipalScreen(
                                         navController.navigate(route = Rutas.PerfilScreen.ruta)
                                     }
                             )
-                            Text(text = context.getString(R.string.txtPerfil))
+                            Text(
+                                text = context.getString(R.string.txtPerfil),
+                                fontWeight = FontWeight.ExtraBold
+                            )
                         }
 
                         Column(verticalArrangement = Arrangement.Center,
@@ -170,10 +177,14 @@ fun PrincipalScreen(
                             Icon(
                                 imageVector = Icons.Default.Home,
                                 contentDescription = "Inicio",
-                                tint = Color.White,
+                                tint = Color.Cyan,
                                 modifier = Modifier.size(45.dp)
                             )
-                            Text(text = "Inicio")
+                            Text(
+                                text = "Inicio",
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Cyan
+                            )
                         }
 
                         Column(verticalArrangement = Arrangement.Center,
@@ -190,22 +201,11 @@ fun PrincipalScreen(
 
                                 //Navega a Informes
                             )
-                            Text(text = context.getString(R.string.txtInformes))
-                        }
-
-                        /*
-                        Column(verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally){
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_photo_24),
-                                contentDescription = "Album",
-                                tint = Color.White,
-                                modifier = Modifier.size(45.dp)
-
-                                //Navega al album de fotos
+                            Text(
+                                text = context.getString(R.string.txtInformes),
+                                fontWeight = FontWeight.ExtraBold
                             )
-                            Text(text = "Album")
-                        }*/
+                        }
                     }
                 },
                 containerColor = Color.Black,
@@ -247,7 +247,7 @@ fun PrincipalScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.fondo5),
+                painter = painterResource(id = R.drawable.fondo),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -262,7 +262,11 @@ fun PrincipalScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(text = "Seleccione un momento del dia, para añadir, eliminar o buscar alimentos")
+                    Text(
+                        text = "Seleccione un momento del dia, para añadir, eliminar o buscar alimentos",
+                        fontSize = TextUnit(18f, TextUnitType.Sp),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 Spacer(Modifier.height(40.dp))
                 TarjetaDia(
@@ -330,9 +334,17 @@ fun PrincipalScreen(
                                             ).show()
                                         }
                                         showProducto = false //Cierra el dialog
-                                    }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Cyan,
+                                        contentColor = Color.White
+                                    )
                                 ) {
-                                    Text(text = "Guardar")
+                                    Text(
+                                        text = "Guardar",
+                                        fontSize = TextUnit(13f, TextUnitType.Sp),
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
                         },
@@ -341,27 +353,42 @@ fun PrincipalScreen(
                                 onClick = {
                                     //Lo guarda en la Base de datos
                                     showProducto = false //Cierra el dialog
-                                }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Gray,
+                                    contentColor = Color.White
+                                )
                             ) {
-                                Text(text = if (alimento == null) "Salir" else "Cancelar")
+                                Text(
+                                    text = if (alimento == null) "Salir" else "Cancelar",
+                                    fontSize = TextUnit(13f, TextUnitType.Sp),
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         },
                         title = {
                             Text(
-                                text = if (alimento == null) "Error"
-                                else alimento!!.descAlimento
+                                text = if (alimento == null) "Error" else alimento!!.descAlimento,
+                                fontSize = TextUnit(23f, TextUnitType.Sp),
+                                fontWeight = FontWeight.ExtraBold
                             )
                         },
                         text = {
                             if (alimento == null) {
                                 Text(
-                                    text = "No se ha encontrado el producto"
+                                    text = "No se ha encontrado el producto",
+                                    fontSize = TextUnit(15f, TextUnitType.Sp),
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
 
                             if (alimento != null) {
                                 OutlinedTextField(
-                                    label = { Text(text = "Elige el momento del dia en el cual lo quieres guardar:") },
+                                    label = { Text(
+                                        text = "Elige el momento del dia en el cual lo quieres guardar:",
+                                        fontSize = TextUnit(14f, TextUnitType.Sp),
+                                        fontWeight = FontWeight.Bold
+                                    ) },
                                     value = momentoDia,
                                     onValueChange = {},
                                     trailingIcon = {
@@ -379,7 +406,8 @@ fun PrincipalScreen(
                                     readOnly = true
                                 )
                             }
-                        }
+                        },
+                        containerColor = Color.DarkGray
                     )
                 }
 
@@ -408,17 +436,11 @@ fun PrincipalScreen(
                                                 elegirMomentoDia = false
                                             }
                                     ) {
-                                        Text(text = item)
-                                        /*Spacer(modifier = Modifier.weight(1f))
-                                    RadioButton(
-                                        selected = selectedItem == items.indexOf(item),
-                                        onClick = {
-                                            selectedItem = items.indexOf(item)
-                                            icon = Icons.Default.KeyboardArrowDown
-                                            momentoDia = items[selectedItem]
-                                            elegirMomentoDia = false //Cerramos el dialog
-                                        }
-                                    )*/
+                                        Text(
+                                            text = item,
+                                            fontSize = TextUnit(18f, TextUnitType.Sp),
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                     Divider()
                                 }
@@ -531,7 +553,9 @@ fun TarjetaDia(momentoDia: String, idImg: Int,navController: NavController){
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = momentoDia,
-                color = Color.White
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = TextUnit(16f, TextUnitType.Sp)
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),

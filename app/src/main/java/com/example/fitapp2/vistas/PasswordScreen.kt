@@ -2,7 +2,6 @@ package com.example.fitapp2.vistas
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +53,7 @@ fun PasswordScreen(navController: NavController, userController: UsuarioControll
         modifier = Modifier.fillMaxSize()
     ) {
         Image(
-            painter = painterResource(id = R.drawable.fondo4),
+            painter = painterResource(id = R.drawable.fondo),
             contentDescription = "Fondo",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -142,6 +141,7 @@ fun PasswordScreen(navController: NavController, userController: UsuarioControll
             ) {
                 Text(
                     text = "Enviar",
+                    color = Color.White,
                     fontWeight = FontWeight.ExtraBold
                 )
             }

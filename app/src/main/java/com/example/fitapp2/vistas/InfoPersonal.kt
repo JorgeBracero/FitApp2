@@ -29,6 +29,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -100,8 +101,10 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
                     title = {
                         Text(
                             text = "Datos Personales",
-                            fontSize = TextUnit(30f, TextUnitType.Sp),
-                            fontWeight = FontWeight.ExtraBold
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = TextUnit(20f, TextUnitType.Sp)
                         )
                     },
                     navigationIcon = {
@@ -117,27 +120,13 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
                     }
                 )
             },
-            bottomBar = {
-                BottomAppBar(
-                    content = {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ){
-                            Text(text = "Informacion Personal")
-                        }
-                    },
-                    containerColor = Color.Black,
-                    contentColor = Color.White
-                )
-            }
+            containerColor = Color.Black
         ) {
             Box(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.fondo5),
+                    painter = painterResource(id = R.drawable.fondo),
                     contentDescription = "Fondo",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -220,7 +209,8 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Gray
+                            containerColor = Color.Cyan,
+                            contentColor = Color.White
                         )
                     ) {
                         Text(
@@ -326,18 +316,11 @@ fun panelSexo(onDismiss: () -> Unit, callback: (String) -> Unit) {
                                 onDismiss() //Cerramos el dialog
                             }
                     ) {
-                        Text(text = item)
-                        /*Spacer(modifier = Modifier.weight(1f))
-                        RadioButton(
-                            selected = selectedItem == items.indexOf(item),
-                            onClick = {
-                                println("Antes de cambiar: $selectedItem")
-                                selectedItem = items.indexOf(item)
-                                println("Despues de actualizar: $selectedItem")
-                                callback(items[selectedItem])
-                                onDismiss() //Cerramos el dialog
-                            }
-                        )*/
+                        Text(
+                            text = item,
+                            fontSize = TextUnit(18f, TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Divider()
                 }

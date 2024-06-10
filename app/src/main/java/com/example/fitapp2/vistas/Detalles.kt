@@ -47,6 +47,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.R
@@ -88,7 +90,10 @@ fun DetallesScreen(
                     title = {
                             Text(
                                 text = alimento!!.descAlimento,
-                                fontWeight = FontWeight.ExtraBold
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = TextUnit(23f, TextUnitType.Sp)
                             )
                     },
                     navigationIcon = {
@@ -116,7 +121,7 @@ fun DetallesScreen(
                 modifier = Modifier.fillMaxSize()
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.fondo5),
+                    painter = painterResource(id = R.drawable.fondo),
                     contentDescription = "Fondo",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -135,25 +140,48 @@ fun DetallesScreen(
                             .padding(8.dp),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        storeController.mostrarImagen(context, alimento!!.imgAlimento, 200.dp)
+                        storeController.mostrarImagen(context, alimento!!.imgAlimento, 85.dp)
                         Column {
-                            Text(text = "Alimento: ${alimento!!.descAlimento}")
-                            Text(text = "Marca: ${alimento!!.marcaAlimento}")
+                            Text(
+                                text = "${alimento!!.descAlimento}",
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = TextUnit(22f, TextUnitType.Sp)
+                            )
+                            Text(
+                                text = "${alimento!!.marcaAlimento}",
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = TextUnit(18f, TextUnitType.Sp)
+                            )
                         }
                     }
 
-                    Text(text = "Categorias", textAlign = TextAlign.Start)
+                    Text(
+                        text = "Categorias",
+                        textAlign = TextAlign.Start,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = TextUnit(20f, TextUnitType.Sp)
+                    )
                     //Mostramos cada una de las categorias por separado
                     alimento!!.catsAlimento.trim().split(",").forEach { cat ->
                         Card(
                             modifier = Modifier.padding(8.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color.Gray,
+                                containerColor = Color.Blue,
                                 contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text(text = cat)
+                            Text(
+                                text = cat,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = TextUnit(17f, TextUnitType.Sp)
+                            )
                         }
                     }
 
@@ -165,13 +193,23 @@ fun DetallesScreen(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "Ingredientes")
+                        Text(
+                            text = "Ingredientes",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(20f, TextUnitType.Sp)
+                        )
                         Spacer(Modifier.height(8.dp))
                         //Recorremos cada uno de los ingredientes, y los mostramos junto a su porcentaje asociado
                         alimento!!.ingredientes.forEach { ing ->
                             val idFormateado = ing.idIng.substring(ing.idIng.indexOf(":") + 1)
                             if (ing.porcentaje > 0) {
-                                Text(text = "$idFormateado: ${ing.porcentaje.toInt()}%")
+                                Text(
+                                    text = "$idFormateado: ${ing.porcentaje.toInt()}%",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = TextUnit(17f, TextUnitType.Sp)
+                                )
                             }
                         }
 
@@ -181,23 +219,60 @@ fun DetallesScreen(
 
                         //Nutrientes
                         //Mostramos todos los datos
-                        Text(text = "Nutrientes")
+                        Text(
+                            text = "Nutrientes",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(20f, TextUnitType.Sp)
+                        )
                         Spacer(Modifier.height(8.dp))
-                        Text(text = "Azucar: ${alimento!!.nutrientes.azucar.toInt()} g")
-                        Text(text = "Sal: ${alimento!!.nutrientes.sal.toInt()} g")
-                        Text(text = "Carbohidratos: ${alimento!!.nutrientes.carbohidratos.toInt()} g")
-                        Text(text = "Proteinas: ${alimento!!.nutrientes.proteinas.toInt()} g")
-                        Text(text = "Grasas: ${alimento!!.nutrientes.grasas.toInt()} g")
-                        Text(text = "Sodio: ${alimento!!.nutrientes.sodio.toInt()} g")
+                        Text(
+                            text = "Azucar: ${alimento!!.nutrientes.azucar.toInt()} g",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(17f, TextUnitType.Sp)
+                        )
+                        Text(
+                            text = "Sal: ${alimento!!.nutrientes.sal.toInt()} g",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(17f, TextUnitType.Sp)
+                        )
+                        Text(
+                            text = "Carbohidratos: ${alimento!!.nutrientes.carbohidratos.toInt()} g",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(17f, TextUnitType.Sp)
+                        )
+                        Text(
+                            text = "Proteinas: ${alimento!!.nutrientes.proteinas.toInt()} g",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(17f, TextUnitType.Sp)
+                        )
+                        Text(
+                            text = "Grasas: ${alimento!!.nutrientes.grasas.toInt()} g",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(17f, TextUnitType.Sp)
+                        )
+                        Text(
+                            text = "Sodio: ${alimento!!.nutrientes.sodio.toInt()} g",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(17f, TextUnitType.Sp)
+                        )
                     }
 
                     Spacer(Modifier.height(8.dp))
 
                     //Calorias
-                    Text(text = "Calorias 100g: ${alimento!!.nutrientes.calorias.toInt()} cal")
-
-                    //AÑADIR FECHA DE CONSUMO DEL ALIMENTO
-
+                    Text(
+                        text = "Calorias 100g: ${alimento!!.nutrientes.calorias.toInt()} cal",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = TextUnit(18f, TextUnitType.Sp)
+                    )
                 }
             }
         }

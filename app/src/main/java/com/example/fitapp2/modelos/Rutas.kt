@@ -4,7 +4,6 @@ sealed class Rutas(val ruta: String) {
     object LoginScreen: Rutas("LoginScreen")
     object PrincipalScreen: Rutas("PrincipalScreen")
     object PerfilScreen: Rutas("PerfilScreen")
-    object DatosInicialesScreen: Rutas("DatosInicialesScreen")
     object BuscarScreen: Rutas("BuscarScreen")
     object InfoPersonalScreen: Rutas("InfoPersonalScreen")
     object DetallesScreen: Rutas("DetallesScreen")
@@ -12,4 +11,5 @@ sealed class Rutas(val ruta: String) {
     object PesoScreen: Rutas("PesoScreen")
     object PasswordScreen: Rutas("PasswordScreen")
     object InformesScreen: Rutas("InformesScreen")
+    object RegistroScreen: Rutas("RegistroScreen")
 }

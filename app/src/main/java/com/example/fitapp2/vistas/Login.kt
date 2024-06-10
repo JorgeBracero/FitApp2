@@ -38,7 +38,6 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -53,7 +52,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +65,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.R
 import com.example.fitapp2.controladores.UsuarioController
+import com.example.fitapp2.metodos.LoginCard
+import com.example.fitapp2.metodos.Terminos
 import com.example.fitapp2.metodos.getFloat
 import com.example.fitapp2.metodos.isConnectedToNetwork
 import com.example.fitapp2.metodos.round
@@ -87,7 +87,7 @@ fun LoginScreen(navController: NavController, userController: UsuarioController)
             modifier = Modifier.fillMaxSize()
         ){
             Image(
-                painter = painterResource(id = R.drawable.fondo4),
+                painter = painterResource(id = R.drawable.fondo),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -99,12 +99,6 @@ fun LoginScreen(navController: NavController, userController: UsuarioController)
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                /*Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Idiomas(context, { idiomaActual = it })
-                }*/
                 Text(
                     text = "FitApp",
                     color = Color.White,
@@ -112,15 +106,11 @@ fun LoginScreen(navController: NavController, userController: UsuarioController)
                     fontSize = TextUnit(35f, TextUnitType.Sp),
                     style = MaterialTheme.typography.titleLarge
                 )
+
                 Spacer(modifier = Modifier.height(12.dp))
-                //Variables
-                val txtLogin = context.getString(R.string.btLog)
-                val txtInvitado = context.getString(R.string.btInvitado)
-                val idGoogle = R.drawable.logogoogle
-                val idInvitado = R.drawable.invitado
 
                 //Cards
-                LoginCard(context, navController, userController, checkedTerminos)
+                LoginCard(context, navController, userController, true,checkedTerminos)
                 Spacer(modifier = Modifier.height(10.dp))
                 //Tarjeta(txtInvitado, idInvitado, context, navController)
                 Spacer(modifier = Modifier.height(150.dp))
@@ -139,413 +129,6 @@ fun LoginScreen(navController: NavController, userController: UsuarioController)
             }
         }
     })
-}
-
-
-//Funcion que muestra cada uno de los Cards para inicar sesion en la app
-@Composable
-fun Tarjeta(texto: String, idImg: Int, context: Context, navController: NavController) {
-    var showPanel by rememberSaveable { mutableStateOf(false) }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable {
-                if (texto.equals(context.getString(R.string.btInvitado))) {
-                    showPanel = true
-                } else {
-                    navController.navigate(Rutas.DatosInicialesScreen.ruta + "/user")
-                }
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = Color.DarkGray,
-            contentColor = Color.White
-        ),
-        shape = MaterialTheme.shapes.medium
-    ){
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ){
-            Image(
-                painter = painterResource(id = idImg),
-                contentDescription = null,
-                modifier = Modifier.size(50.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = texto,
-                color = Color.White
-            )
-        }
-
-    }
-
-    if(showPanel){
-        AlertDialog(
-            onDismissRequest = { showPanel = false },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showPanel = false
-                        //Navega con parametro
-                        navController.navigate(Rutas.DatosInicialesScreen.ruta + "/guest")
-                    }
-                ) {
-                    Text(text = context.getString(R.string.btPanelInvitado))
-                }
-            },
-            title = { Text(text = context.getString(R.string.titPanelInvitado)) },
-            text = { Text(text = context.getString(R.string.msgPanelInvitado)) }
-        )
-    }
-}
-
-//Diseño Login
-@Composable
-fun LoginCard(
-    context: Context,
-    navController: NavController,
-    userController: UsuarioController,
-    checkedTerminos: Boolean
-){
-    var txtEmail by rememberSaveable { mutableStateOf("") }
-    var txtPassword by rememberSaveable { mutableStateOf("") }
-    var txtPeso by rememberSaveable { mutableStateOf("") }
-    var txtAltura by rememberSaveable { mutableStateOf("") }
-    var txtEdad by rememberSaveable { mutableStateOf("") }
-    var txtSexo by rememberSaveable { mutableStateOf("H") }
-    var nombreUser by rememberSaveable { mutableStateOf("") }
-    var showPanelSexo by rememberSaveable { mutableStateOf(false) }
-    var reg by rememberSaveable { mutableStateOf(false) }
-
-    Card(
-        modifier = Modifier.padding(8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
-    ){
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ){
-                //Boton registro
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        //Cambia el contenido del Card al del registro
-                        reg = true
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black
-                    )
-                ) {
-                    Text(
-                        text = "REGISTRO",
-                        style = TextStyle(
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    )
-                }
-
-                //Boton login
-                Button(
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        //Cambia el contenido del Card al del Login
-                        reg = false
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Black
-                    )
-                ) {
-                    Text(
-                        text = "LOGIN",
-                        style = TextStyle(
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(9.dp))
-
-            //CONTENIDO
-            //Logo
-            Image(
-                painter = painterResource(id = R.drawable.fitlogo),
-                contentDescription = "LogoApp",
-                modifier = Modifier.size(90.dp)
-                        .border(
-                            width = 1.dp,
-                            color = Color.Black
-                        )
-            )
-            Spacer(Modifier.height(9.dp))
-
-            Text(
-                text = "Los campos (*) son obligatorios",
-                style = TextStyle(
-                    color = Color.Black,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = TextUnit(15f, TextUnitType.Sp)
-                )
-            )
-
-            //El email y la contraseña van a estar siempre
-            txtEmail = CampoEmail()
-            Spacer(Modifier.height(7.dp))
-            txtPassword = CampoContrasenia()
-
-            if(reg){ //En caso de que se trate de un registro
-                nombreUser = CampoRegistro(label = "Nombre de usuario*")
-                Spacer(Modifier.height(7.dp))
-                txtPeso = CampoRegistro(label = "Peso kg*")
-                Spacer(Modifier.height(7.dp))
-                txtAltura = CampoRegistro(label = "Altura m*")
-                Spacer(Modifier.height(7.dp))
-                txtEdad = CampoRegistro(label = "Edad*")
-                Spacer(Modifier.height(7.dp))
-                CampoSexo(txtSexo, {
-                    //Abre el dialogo
-                    showPanelSexo = true
-                })
-            }
-
-            if(showPanelSexo){
-                panelSexo({showPanelSexo = false},{
-                    txtSexo = it
-                })
-            }
-
-            Spacer(Modifier.height(7.dp))
-
-            //Boton de inicio de sesion/registro
-            Button(
-                onClick = {
-                    //Necesitas haber validado antes los terminos de la aplicacion
-                    if(checkedTerminos) {
-                        //Logica para el registro/login de firebase, necesitas conexion wifi
-                        if (reg) {
-                        if (txtEmail.contains("@") && txtPassword.length >= 6 &&
-                                validarDatos(txtPeso, txtAltura, txtEdad, nombreUser)) {
-                            if (isConnectedToNetwork(context)) {
-
-                                    userController.registrar(txtEmail, txtPassword) { success, error ->
-                                        if (success) {
-                                            // Registro exitoso
-                                            //Comprobamos que los demas datos son correctos
-                                            //Navega a la pantalla principal
-                                            val pesoUser = getFloat(txtPeso).round(1)
-                                            val alturaUser = getFloat(txtAltura).round(2)
-                                            val edadUser = txtEdad.toInt()
-
-                                            //Añadimos el nuevo usuario a nuestra tabla
-                                            //Extraemos primero el uid de nuestro usuario registrado
-                                            val uidUser = userController.getAuth().currentUser?.uid
-                                            val usuario = Usuario(
-                                                    uidUser!!,
-                                                    txtEmail,
-                                                    nombreUser,
-                                                    pesoUser,
-                                                    alturaUser,
-                                                    txtSexo,
-                                                    edadUser,
-                                                    "Predeterminada"
-                                                )
-
-                                                println("Altura: $alturaUser")
-                                                println("Peso: $pesoUser")
-                                                println("Uid: $uidUser")
-                                                println("Usuario: $usuario")
-
-                                                userController.addOrUpdUsuario(usuario)
-                                                navController.navigate(Rutas.PrincipalScreen.ruta)
-
-                                        } else {
-                                            // Error en el registro, muestra el mensaje de error
-                                            Toast.makeText(context, error, Toast.LENGTH_SHORT)
-                                                .show()
-                                        }
-                                    }
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Esta accion requiere conexion a Internet",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }else{
-                            //Si estos datos no son correctos
-                            Toast.makeText(
-                                context,
-                                "Peso, altura o nombre incorrectos",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-
-                        } else {
-                            if (txtEmail.contains("@") && txtPassword.length >= 6) {
-                                userController.login(txtEmail, txtPassword) { success, error ->
-                                    if (success) {
-                                        // Login exitoso
-                                        navController.navigate(Rutas.PrincipalScreen.ruta)
-                                    } else {
-                                        // Error en el login, muestra el mensaje de error
-                                        Toast.makeText(context, error, Toast.LENGTH_SHORT)
-                                            .show()
-                                    }
-                                }
-                            }else{
-                                //Si estos datos no son correctos
-                                Toast.makeText(
-                                    context,
-                                    "Email o contraseña incorrectos",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }else{
-                        Toast.makeText(
-                            context,
-                            "Acepte los terminos de politica y servicio",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black
-                )
-            ) {
-                Text(
-                    text = if(reg) "Registrate" else "Inicia sesion",
-                    style = TextStyle(
-                        color = Color.White,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                )
-            }
-
-            Spacer(Modifier.height(7.dp))
-
-            //Olvidaste tu contraseña??
-            if(!reg){
-                Text(
-                    text = "¿Olvidaste tu contraseña?",
-                    style = TextStyle(
-                        color = Color.Blue,
-                        fontWeight = FontWeight.ExtraBold
-                    ),
-                    modifier = Modifier.clickable {
-                        //Navega a la pantalla de ForgotPassword
-                        navController.navigate(Rutas.PasswordScreen.ruta)
-                    }
-                )
-            }
-        }
-    }
-}
-
-
-//Campos de peso altura y nombre usuario del Login
-@Composable
-fun CampoRegistro(label: String): String {
-    var text by rememberSaveable { mutableStateOf("") }
-    var teclado = KeyboardOptions.Default
-
-    if(label == "Peso kg*" || label == "Altura m*" || label == "Edad*"){
-        teclado = KeyboardOptions(
-            keyboardType = KeyboardType.Decimal,
-            imeAction = ImeAction.Done
-        )
-    }
-
-    OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
-        label = { Text(text = label) },
-        keyboardOptions = teclado,
-        modifier = Modifier.padding(6.dp),
-        shape = RoundedCornerShape(4.dp)
-    )
-    return text
-}
-
-//Campos de peso altura y nombre usuario del Login
-@Composable
-fun CampoEmail(): String {
-    var text by rememberSaveable { mutableStateOf("") }
-    OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
-        label = { Text(text = "Email*") },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email,
-            imeAction = ImeAction.Next
-        ),
-        trailingIcon = {
-            Icon(
-                imageVector = Icons.Default.Email,
-                contentDescription = "Email",
-                tint = Color.Black
-            )
-        },
-        modifier = Modifier.padding(6.dp),
-        shape = RoundedCornerShape(4.dp)
-    )
-    return text
-}
-
-//Campos de peso altura y nombre usuario del Login
-@Composable
-fun CampoContrasenia(): String {
-    var text by rememberSaveable { mutableStateOf("") }
-    var iconId by rememberSaveable { mutableStateOf(R.drawable.baseline_visibility_off_24) }
-    var passwordVisible by rememberSaveable { mutableStateOf(false) }
-
-    OutlinedTextField(
-        value = text,
-        onValueChange = {
-            text = it
-        },
-        label = { Text(text = "Contraseña*") },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = if (passwordVisible) KeyboardType.Text else KeyboardType.Password,
-            imeAction = ImeAction.Done
-        ),
-        trailingIcon = {
-            if(text.isNotEmpty()) {
-                Icon(
-                    painter = painterResource(id = iconId),
-                    contentDescription = "Contraseña Visible o no",
-                    tint = Color.Black,
-                    modifier = Modifier.clickable {
-                        if (iconId == R.drawable.baseline_visibility_24) {
-                            iconId = R.drawable.baseline_visibility_off_24
-                            passwordVisible = false
-                        } else {
-                            iconId = R.drawable.baseline_visibility_24
-                            passwordVisible = true
-                        }
-                    }
-                )
-            }
-        },
-        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-        modifier = Modifier.padding(6.dp),
-        shape = RoundedCornerShape(4.dp)
-    )
-    return text
 }
 
 //Funcion para mostrar un combobox de los idiomas de la app
@@ -654,64 +237,6 @@ fun Idiomas(context: Context, callback: (String) -> Unit) {
         )
     }
     callback(idioma)
-}
-
-
-//Funcion para mostrar los terminos de politica y servicio de nuestra app
-@Composable
-fun Terminos(context: Context, callback: (Boolean) -> Unit) {
-    var checked by rememberSaveable { mutableStateOf(false) }
-    var showPanel by rememberSaveable { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = { checked = !checked },
-            colors = CheckboxDefaults.colors(
-                checkedColor = Color.Blue,
-                checkmarkColor = Color.White,
-                uncheckedColor = Color.DarkGray
-            )
-        )
-        Text(
-            text = context.getString(R.string.ckTerminos),
-            modifier = Modifier.clickable {
-                showPanel = true
-            }
-        )
-
-        if(showPanel){
-            AlertDialog(
-                onDismissRequest = { showPanel = false },
-                confirmButton = {
-                    Row(modifier = Modifier.fillMaxWidth()){
-                        Button(
-                            onClick = {
-                                showPanel = false
-                                checked = true
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Blue,
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Text(text = context.getString(R.string.btPanelInvitado))
-                        }
-                    }
-                },
-                title = { Text(text = context.getString(R.string.titTerminos)) },
-                text = { Text(text = context.getString(R.string.ckTerminos)) }
-            )
-        }
-    }
-
-    callback(checked)
 }
 
 //Metodo para cambiar el idioma de la app

@@ -37,10 +37,12 @@ import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -56,7 +58,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.fitapp2.R
@@ -92,7 +97,13 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
         topBar = {
             TopAppBar(
                 title = {
-                        Text(text = context.getString(R.string.txtInformes))
+                    Text(
+                        text = context.getString(R.string.txtInformes),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = TextUnit(23f, TextUnitType.Sp)
+                    )
                 },
                 navigationIcon = {
                     Icon(
@@ -130,7 +141,10 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                                         navController.navigate(route = Rutas.PerfilScreen.ruta)
                                     }
                             )
-                            Text(text = context.getString(R.string.txtPerfil))
+                            Text(
+                                text = context.getString(R.string.txtPerfil),
+                                fontWeight = FontWeight.ExtraBold
+                            )
                         }
 
                         Column(verticalArrangement = Arrangement.Center,
@@ -139,12 +153,16 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                                 imageVector = Icons.Default.Home,
                                 contentDescription = "Inicio",
                                 tint = Color.White,
-                                modifier = Modifier.size(45.dp)
+                                modifier = Modifier
+                                    .size(45.dp)
                                     .clickable {
                                         navController.navigate(Rutas.PrincipalScreen.ruta)
                                     }
                             )
-                            Text(text = "Inicio")
+                            Text(
+                                text = "Inicio",
+                                fontWeight = FontWeight.ExtraBold
+                            )
                         }
 
                         Column(verticalArrangement = Arrangement.Center,
@@ -152,28 +170,15 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                             Icon(
                                 imageVector = Icons.Default.Info,
                                 contentDescription = "Informes",
-                                tint = Color.White,
+                                tint = Color.Cyan,
                                 modifier = Modifier.size(45.dp)
-
-
-                                //Navega a Informes
                             )
-                            Text(text = context.getString(R.string.txtInformes))
+                            Text(
+                                text = context.getString(R.string.txtInformes),
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.Cyan
+                            )
                         }
-
-                        /*
-                        Column(verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally){
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_photo_24),
-                                contentDescription = "Album",
-                                tint = Color.White,
-                                modifier = Modifier.size(45.dp)
-
-                                //Navega al album de fotos
-                            )
-                            Text(text = "Album")
-                        }*/
                     }
                 },
                 containerColor = Color.Black,
@@ -186,7 +191,7 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.fondo5),
+                painter = painterResource(id = R.drawable.fondo),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -283,13 +288,18 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                     }
 
                     //Calculamos el promedio diario
-                    promedioDiario =
-                        calcularPromedioDiario(caloriasConsumidas, numAlimentosConsumidos)
+                    promedioDiario = calcularPromedioDiario(caloriasConsumidas, numAlimentosConsumidos)
 
                     Column(
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(text = "Fecha seleccionada")
+                        Text(
+                            text = "Fecha seleccionada",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = TextUnit(18f, TextUnitType.Sp)
+                        )
                         FechaElegida(fechaElegida!!, {
                             cambiarFecha = true
                         })
@@ -307,10 +317,16 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                                 informeSeleccionado = "calorias"
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.LightGray
+                                containerColor = Color.Cyan,
+                                contentColor = Color.White
                             )
                         ) {
-                            Text(text = "CALORIAS")
+                            Text(
+                                text = "CALORIAS",
+                                color = Color.White,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = TextUnit(16f, TextUnitType.Sp)
+                            )
                         }
 
                         Button(
@@ -319,10 +335,16 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                                 informeSeleccionado = "nutrientes"
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.LightGray
+                                containerColor = Color.Cyan,
+                                contentColor = Color.White
                             )
                         ) {
-                            Text(text = "NUTRIENTES")
+                            Text(
+                                text = "NUTRIENTES",
+                                color = Color.White,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = TextUnit(16f, TextUnitType.Sp)
+                            )
                         }
                     }
 
@@ -357,7 +379,16 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
                         panelFecha(fechas, { cambiarFecha = false }, { fechaElegida = it })
                     }
                 } else {
-                    Text(text = "Este usuario aun no ha consumido ningun alimento")
+                    Row(
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Este usuario aun no ha consumido ningun alimento",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(16f, TextUnitType.Sp)
+                        )
+                    }
                 }
             }
         }
@@ -368,62 +399,59 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
 @Composable
 fun panelFecha(fechas: List<String?>, onDismiss: () -> Unit, callback: (String) -> Unit) {
     var selectedItem by rememberSaveable { mutableStateOf(0) }
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            confirmButton = {},
-            text = {
-                LazyColumn(
-                    modifier = Modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    items(fechas) { fecha ->
-                        Spacer(modifier = Modifier.height(15.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    println("Antes de cambiar: $selectedItem")
-                                    selectedItem = fechas.indexOf(fecha)
-                                    println("Despues de actualizar: $selectedItem")
-                                    onDismiss() //Cerramos el dialog
-                                    callback(fechas[selectedItem]!!)
-                                }
-                        ) {
-                            Text(text = fecha!!)
-                            /*Spacer(modifier = Modifier.weight(1f))
-                            RadioButton(
-                                selected = selectedItem == fechas.indexOf(fecha),
-                                onClick = {
-                                    println("Antes de cambiar: $selectedItem")
-                                    selectedItem = fechas.indexOf(fecha)
-                                    println("Despues de actualizar: $selectedItem")
-                                    onDismiss() //Cerramos el dialog
-                                    callback(fechas[selectedItem]!!)
-                                }
-                            )*/
-                        }
-                        Divider()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {},
+        text = {
+            LazyColumn(
+                modifier = Modifier.padding(8.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                items(fechas) { fecha ->
+                    Spacer(modifier = Modifier.height(15.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                println("Antes de cambiar: $selectedItem")
+                                selectedItem = fechas.indexOf(fecha)
+                                println("Despues de actualizar: $selectedItem")
+                                onDismiss() //Cerramos el dialog
+                                callback(fechas[selectedItem]!!)
+                            }
+                    ) {
+                        Text(
+                            text = fecha!!,
+                            fontSize = TextUnit(18f, TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
+                    Divider()
                 }
-            },
-            containerColor = Color.DarkGray
-        )
+            }
+        },
+        containerColor = Color.DarkGray
+    )
 }
 
 //Combobox para mostrar la fecha elegida
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FechaElegida(fecha: String, onClick: () -> Unit){
     var icon by remember { mutableStateOf(Icons.Default.KeyboardArrowDown) }
     OutlinedTextField(
         value = fecha,
         onValueChange = {},
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            containerColor = Color.White
+        ),
         trailingIcon = {
             Icon(
                 imageVector = icon,
                 contentDescription = "",
-                tint = Color.White,
+                tint = Color.Black,
                 modifier = Modifier.clickable {
                     //Abre el dialogo
                     icon = Icons.Default.KeyboardArrowUp
@@ -466,14 +494,26 @@ fun CardInforme(
             if (descInforme == "calorias") {
                 //CONTENIDO INFORME DE CALORIAS
                 if (caloriasDiarias != 0) {
-                    Text(text = "Objetivo diario\t\t\t$caloriasDiarias")
+                    Text(
+                        text = "Objetivo diario\t\t\t$caloriasDiarias",
+                        fontSize = TextUnit(20f,TextUnitType.Sp),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 if (caloriasConsumidas != -1) {
-                    Text(text = context.getString(R.string.txtCaloriasCon) + "\t\t\t$caloriasConsumidas")
+                    Text(
+                        text = context.getString(R.string.txtCaloriasCon) + "\t\t\t$caloriasConsumidas",
+                        fontSize = TextUnit(20f,TextUnitType.Sp),
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
-                Text(text = "Promedio Diario $promedioDiario")
+                Text(
+                    text = "Promedio Diario\t\t\t$promedioDiario",
+                    fontSize = TextUnit(20f,TextUnitType.Sp),
+                    fontWeight = FontWeight.Bold
+                )
 
                 //Bucle para crear el diseño de las calorias para el desayuno, almuerzo y cena
                 val momentosDia = listOf("Desayuno", "Almuerzo", "Cena    ")
@@ -483,7 +523,11 @@ fun CardInforme(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Text(text = "Calorias")
+                    Text(
+                        text = "Calorias",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = TextUnit(19f,TextUnitType.Sp)
+                    )
                 }
                 Divider(color = Color.White)
                 momentosDia.forEach { dia ->
@@ -496,11 +540,19 @@ fun CardInforme(
                         Icon(
                             painter = painterResource(id = R.drawable.baseline_square_24),
                             contentDescription = "",
-                            tint = Color.Green
+                            tint = Color.White
                         )
-                        Text(text = dia)
+                        Text(
+                            text = dia,
+                            fontSize = TextUnit(17f,TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
                         Spacer(Modifier.width(220.dp))
-                        Text(text = "${listaCaloriasMomentosDia[index]}")
+                        Text(
+                            text = "${listaCaloriasMomentosDia[index]}",
+                            fontSize = TextUnit(17f,TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                     Divider(color = Color.White)
                     index++ //Actualizamos la posicion
@@ -509,16 +561,28 @@ fun CardInforme(
             }else{
                 if (descInforme == "nutrientes") {
                     //CONTENIDO INFORME DE NUTRIENTES
-                    Text(text = "Nutrientes")
+                    Text(
+                        text = "Nutrientes",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = TextUnit(19f,TextUnitType.Sp)
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(7.dp),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        Text(text = "Nutriente")
+                        Text(
+                            text = "Nutrientes",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(18f,TextUnitType.Sp)
+                        )
                         Spacer(Modifier.width(100.dp))
-                        Text(text = "Total")
+                        Text(
+                            text = "Total",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(18f,TextUnitType.Sp)
+                        )
                     }
 
                     Divider(color = Color.White)
@@ -546,9 +610,17 @@ fun CardInforme(
                                 .padding(top = 5.dp, bottom = 5.dp),
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
-                            Text(text = nutriente)
+                            Text(
+                                text = nutriente,
+                                fontSize = TextUnit(17f,TextUnitType.Sp),
+                                fontWeight = FontWeight.Bold
+                            )
                             Spacer(Modifier.width(100.dp))
-                            Text(text = "${listaNutrientes[index]}")
+                            Text(
+                                text = "${listaNutrientes[index]}",
+                                fontSize = TextUnit(17f,TextUnitType.Sp),
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                         Divider(color = Color.White)
                         index++ //Autoincrementamos la variable
@@ -557,17 +629,33 @@ fun CardInforme(
                 }else{
                     //CONTENIDO INFORME DE ALIMENTOS TOMADOS
                     var totalAlimentos = 0
-                    Text(text = "Alimentos tomados")
+                    Text(
+                        text = "Alimentos tomados",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = TextUnit(19f,TextUnitType.Sp)
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(7.dp),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        Text(text = "Alimentos")
+                        Text(
+                            text = "Alimentos",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = TextUnit(18f,TextUnitType.Sp)
+                        )
                         Spacer(Modifier.width(70.dp))
-                        Text(text = "Cantidad")
-                        Text(text = "Calorias")
+                        Text(
+                            text = "Cantidad",
+                            fontSize = TextUnit(18f,TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Calorias",
+                            fontSize = TextUnit(18f,TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     Divider(color = Color.White)
@@ -599,10 +687,22 @@ fun CardInforme(
                                     .padding(top = 5.dp, bottom = 5.dp),
                                 horizontalArrangement = Arrangement.SpaceAround
                             ) {
-                                Text(text = alimento.descAlimento)
+                                Text(
+                                    text = alimento.descAlimento,
+                                    fontSize = TextUnit(17f,TextUnitType.Sp),
+                                    fontWeight = FontWeight.Bold
+                                )
                                 Spacer(Modifier.width(50.dp))
-                                Text(text = "x$cantidad")
-                                Text(text = calorias.toString())
+                                Text(
+                                    text = "x$cantidad",
+                                    fontSize = TextUnit(17f,TextUnitType.Sp),
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = calorias.toInt().toString(),
+                                    fontSize = TextUnit(17f,TextUnitType.Sp),
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                             Divider(color = Color.White)
                         }
@@ -615,10 +715,22 @@ fun CardInforme(
                             .padding(7.dp),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        Text(text = "Total")
+                        Text(
+                            text = "Total",
+                            fontSize = TextUnit(18f,TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
                         Spacer(Modifier.width(70.dp))
-                        Text(text = "x$totalAlimentos")
-                        Text(text = caloriasConsumidas.toString())
+                        Text(
+                            text = "x$totalAlimentos",
+                            fontSize = TextUnit(18f,TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = caloriasConsumidas.toString(),
+                            fontSize = TextUnit(18f,TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
