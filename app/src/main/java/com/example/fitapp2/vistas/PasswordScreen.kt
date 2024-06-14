@@ -66,7 +66,7 @@ fun PasswordScreen(navController: NavController, userController: UsuarioControll
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Restablece tu contraseña",
+                text = "Restablecer contraseña",
                 color = Color.White,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = TextUnit(35f, TextUnitType.Sp),
