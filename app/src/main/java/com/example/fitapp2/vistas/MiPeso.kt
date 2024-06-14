@@ -96,7 +96,7 @@ fun PesoScreen(navController: NavController, userController: UsuarioController) 
                 modifier = Modifier.fillMaxSize()
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.fondo),
+                    painter = painterResource(id = R.drawable.fondo3),
                     contentDescription = "Fondo",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

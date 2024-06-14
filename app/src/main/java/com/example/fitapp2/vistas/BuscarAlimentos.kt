@@ -167,7 +167,7 @@ fun BuscarScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.fondo),
+                painter = painterResource(id = R.drawable.fondo3),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -372,7 +372,8 @@ fun apiCall(query: String, size: Int): Deferred<List<Alimento?>> {
     }
 }
 
-
+//Extrae todos los codigos de barras de los productos devueltos por la API, a partir de la busqueda dada
+//en formato HTML
 private fun extractBarcodesFromHtml(html: String): List<String> {
     val barcodes = mutableListOf<String>()
     val document = Jsoup.parse(html)

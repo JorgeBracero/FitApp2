@@ -10,6 +10,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
+//CONTROLADOR DE ALIMENTOS
 class AlimentoController(db: FirebaseDatabase){
     private val refAlimentos = db.getReference("alimentos")
 
@@ -97,7 +98,7 @@ class AlimentoController(db: FirebaseDatabase){
     }
 
 
-    //Funcion para obtener todos los alimentos de esa seccion del dia
+    //Funcion para obtener todos los alimentos de una seccion del dia
     fun getAlimentosDia(
         query: String,
         momentoDia: String,
@@ -179,80 +180,5 @@ class AlimentoController(db: FirebaseDatabase){
                 callback(emptyList())
             }
         })
-    }
-
-    /*
-    //Metodo para mostrar las categorias disponibles a filtrar
-    fun getCategoriasDia(
-        momentoDia: String,
-        email: String,
-        regAlimentoController: RegAlimentoController,
-        callback: (List<String>) -> Unit
-    ) {
-        val categoriasTemp = mutableListOf("Filtrar") //Categoria por defecto
-
-        // Listener para obtener los cambios en los datos de alimentos
-        refAlimentos.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                dataSnapshot.children.forEach { data ->
-                    val alimento = data.getValue(Alimento::class.java)
-                    println("Alimento de la vuelta: $alimento")
-                    alimento?.let {
-                        var encontrado = false // Variable para seguir el estado de si se ha encontrado el objeto o no
-                        // Por cada alimento, comprobamos el momento del día en el cual se ha consumido
-                        regAlimentoController.getRefRegAl().addValueEventListener(object : ValueEventListener {
-                            override fun onDataChange(snapshot: DataSnapshot) {
-                                snapshot.children.forEach { reg ->
-                                    if (encontrado) return@forEach // Si ya se encontró el objeto, salir del bucle
-                                    val regAlimento = reg.getValue(RegAlimento::class.java)
-                                    println("Registro alimento ${alimento.idAlimento}: $regAlimento")
-                                    regAlimento?.let {
-                                        if (regAlimento.idAlimento == alimento.idAlimento &&
-                                            regAlimento.momentoDia == momentoDia && regAlimento.email == email) {
-                                            println("Alimento encontrado: $alimento")
-
-                                            //Recorro las categorias de cada alimento y las añado a la lista
-                                            alimento.catsAlimento.trim().split(",").forEach { cat ->
-                                                categoriasTemp.add(cat)
-                                            }
-
-                                            println("Lista categorias actual: $categoriasTemp")
-                                            encontrado = true
-                                        }
-                                    }
-                                }
-
-                                println("categoriasTemp fuera de change: $categoriasTemp")
-                                // Filtramos las categorias para que no haya repetidas
-                                var categoriasFiltradas = categoriasTemp.distinctBy { it }
-
-                                println("categorias filtradas: $categoriasFiltradas")
-
-                                // Llamamos al callback con la lista filtrada
-                                callback(categoriasFiltradas)
-                                println("se ejecuto el callback")
-                            }
-
-                            override fun onCancelled(databaseError: DatabaseError) {
-                                println("Error al obtener los registros de los alimentos: ${databaseError.message}")
-                                // Llamamos al callback con una lista vacía en caso de error
-                                callback(emptyList())
-                            }
-                        })
-                    }
-                }
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                println("Error al obtener alimentos locales: ${databaseError.message}")
-                // Llamamos al callback con una lista vacía en caso de error
-                callback(emptyList())
-            }
-        })
-    }*/
-
-    //Devuelve la ref a mi tabla 'alimentos'
-    fun getRefAlimentos(): DatabaseReference {
-        return refAlimentos
     }
 }

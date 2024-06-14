@@ -67,6 +67,7 @@ import com.example.fitapp2.metodos.isConnectedToNetwork
 import com.example.fitapp2.modelos.Rutas
 import com.example.fitapp2.modelos.Usuario
 
+//VISTA DE PERFIL DE USUARIO
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PerfilScreen(navController: NavController, userController: UsuarioController, storeController: StorageController){
@@ -79,9 +80,8 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var uploadedImageUrl by remember { mutableStateOf<String?>(null) }
 
-
+    //Obtenemos los datos del usuario actual siempre que exista
     if(idUser != null){
-        //Obtenemos los datos del usuario actual
         LaunchedEffect(Unit) {
             userController.obtenerDatosUsuario(idUser, { userBD ->
                 usuarioActual = userBD
@@ -90,7 +90,6 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
     }
 
     if(usuarioActual != null) {
-
         //Obtener imagen del usuario
         val getImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri?.let {
@@ -109,6 +108,7 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                 }
             }
         }
+
 
         Scaffold(
             topBar = {
@@ -211,7 +211,7 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                 modifier = Modifier.fillMaxSize()
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.fondo),
+                    painter = painterResource(id = R.drawable.fondo3),
                     contentDescription = "Fondo",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -239,6 +239,7 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                     onClick = {
                                         //Mostramos la galeria
                                         showGaleria = false
+                                        //Mostramos la galeria del movil
                                         getImage.launch("image/*")
                                     },
                                     colors = ButtonDefaults.buttonColors(
@@ -262,22 +263,13 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                     //Boton de cierre de sesion
                     Button(
                         onClick = {
+                            //Si disponemos de conexion, podemos cerrar la sesion
                             if (isConnectedToNetwork(context)) {
-                                userController.cerrarSesion({ sucess, error ->
-                                    if (sucess) {
-                                        //Si el cierre de sesion es correcto, navega al login
-                                        navController.navigate(Rutas.LoginScreen.ruta)
-                                    } else {
-                                        //En caso contrario, mostramos el mensaje de error
-                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                                    }
-                                })
+                                userController.cerrarSesion() //Cerramos sesion
+                                //Al cerrar sesion, navega al login
+                                navController.navigate(Rutas.LoginScreen.ruta)
                             } else {
-                                Toast.makeText(
-                                    context,
-                                    "Esta accion requiere conexion a Internet",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                Toast.makeText(context, "Esta accion requiere conexion a Internet", Toast.LENGTH_SHORT).show()
                             }
                         },
                         colors = ButtonDefaults.buttonColors(

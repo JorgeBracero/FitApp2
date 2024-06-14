@@ -39,6 +39,7 @@ import java.io.InputStream
 import java.net.MalformedURLException
 import java.net.URL
 
+//CONTROLADOR DE STORAGE
 class StorageController {
     private val storeRef = FirebaseStorage.getInstance().reference
 
@@ -117,6 +118,8 @@ class StorageController {
         return fileName
     }
 
+    //Borra la imagen de un alimento del Storage
+    //Siempre y cuando no existan mas usuarios registrados que hayan consumido ese alimento
     fun borrarImagenAlimento(alimento: Alimento, email: String, regAlimentoController: RegAlimentoController){
         regAlimentoController.alimentoConsumido(alimento, email, { alimentoConsumido ->
             if (!alimentoConsumido) { //Si es un alimento, que no ha sido consumido por otro usuario
@@ -138,25 +141,7 @@ class StorageController {
         })
     }
 
-    /*
-    fun borrarImagenPerfil(img: String){
-        if(img != "Predeterminada") { //La imagen predeterminada de perfil no se borra
-            // Referencia al archivo que deseas eliminar
-            val ref = storeRef.child("images/$img.jpg")
-            // Elimina el archivo
-            ref.delete()
-                .addOnSuccessListener {
-                    // La eliminación se realizó con éxito
-                    println("Archivo eliminado exitosamente.")
-                }
-                .addOnFailureListener { exception ->
-                    // Ocurrió un error al intentar eliminar el archivo
-                    println("Error al eliminar el archivo: $exception")
-                }
-        }
-    }
-    */
-
+    //Extrae el bitmap de una imagen en concreto
     fun getBitmapImagen(context: Context, img: String): Bitmap? {
         var imagenFile: File? = null
         var imagenDescargada = false
@@ -194,6 +179,7 @@ class StorageController {
         }
     }
 
+    //Guarda una copia local de la Imagen descargada del Storage, en un fichero binario
     fun descargarImagen(context: Context, fileName: String, callback: (File?, Exception?) -> Unit) {
         // Crear un archivo local persistente en el directorio de almacenamiento interno de la aplicación
         val localFile = File(context.filesDir, "${fileName}.jpg")
@@ -216,9 +202,5 @@ class StorageController {
                     callback(null, exception)
                 }
         }
-    }
-
-    fun getStoreRef(): StorageReference{
-        return storeRef
     }
 }

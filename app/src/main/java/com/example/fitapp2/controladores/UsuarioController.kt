@@ -9,6 +9,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
+//CONTROLADOR DE USUARIOS
 class UsuarioController(db: FirebaseDatabase){
     private val auth = FirebaseAuth.getInstance()
     private val refUsuarios = db.getReference("usuarios")
@@ -30,12 +31,7 @@ class UsuarioController(db: FirebaseDatabase){
         refUsuarios.child(user.uid).setValue(user)
     }
 
-    //Borra un usuario
-    fun deleteUsuario(user: Usuario){
-        refUsuarios.child(user.uid).removeValue()
-    }
-
-    //Obtener los datos personales
+    //Obtener los datos personales de un usuario
     fun obtenerDatosUsuario(uid: String, callback : (Usuario) -> Unit) {
         var userBD = Usuario()
 
@@ -93,9 +89,8 @@ class UsuarioController(db: FirebaseDatabase){
     }
 
     //Metodo para cerrar sesion en firebase
-    fun cerrarSesion(callback: (Boolean, String?) -> Unit) {
+    fun cerrarSesion() {
         auth.signOut()
-        callback(true, null) //Se cerro sesion con exito
     }
 
     //Metodo para restablecer tu contraseña en firebase
@@ -146,9 +141,5 @@ class UsuarioController(db: FirebaseDatabase){
     //GETTERS
     fun getAuth(): FirebaseAuth{
         return auth
-    }
-
-    fun getRefUsuarios(): DatabaseReference {
-        return refUsuarios
     }
 }

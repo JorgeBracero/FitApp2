@@ -1,13 +1,8 @@
 package com.example.fitapp2.vistas
 
 
-import android.content.Context
-import android.content.res.Configuration
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,182 +75,48 @@ import java.util.Locale
 fun LoginScreen(navController: NavController, userController: UsuarioController){
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    var idiomaActual by remember { mutableStateOf("es") }
     var checkedTerminos by rememberSaveable { mutableStateOf(false) }
-    ProvideUpdatedLocale(idiomaActual,{
-        Box(
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ){
+        Image(
+            painter = painterResource(id = R.drawable.fondo3),
+            contentDescription = "Fondo",
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
-        ){
-            Image(
-                painter = painterResource(id = R.drawable.fondo),
-                contentDescription = "Fondo",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+        )
+        Column(
+            modifier = Modifier
+                .verticalScroll(state = scrollState)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "FitApp",
+                color = Color.White,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = TextUnit(35f, TextUnitType.Sp),
+                style = MaterialTheme.typography.titleLarge
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            //Cards
+            LoginCard(context, navController, userController, true,checkedTerminos)
+            Spacer(modifier = Modifier.height(160.dp))
             Column(
                 modifier = Modifier
-                    .verticalScroll(state = scrollState)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxSize()
+                    .background(Color.Black),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.End
             ) {
-                Text(
-                    text = "FitApp",
-                    color = Color.White,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = TextUnit(35f, TextUnitType.Sp),
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                //Cards
-                LoginCard(context, navController, userController, true,checkedTerminos)
-                Spacer(modifier = Modifier.height(10.dp))
-                //Tarjeta(txtInvitado, idInvitado, context, navController)
-                Spacer(modifier = Modifier.height(150.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black),
-                    verticalArrangement = Arrangement.Bottom,
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Divider()
-                    Terminos(context, {
-                        checkedTerminos = it
-                    })
-                }
+                Divider()
+                Terminos(context, {
+                    checkedTerminos = it
+                })
             }
         }
-    })
-}
-
-//Funcion para mostrar un combobox de los idiomas de la app
-@Composable
-fun Idiomas(context: Context, callback: (String) -> Unit) {
-    var idioma = "es"
-    var selectedItem by rememberSaveable { mutableStateOf(0) }
-    val items = listOf(
-        context.getString(R.string.txtEspañol) to R.drawable.bespania,
-        context.getString(R.string.txtIngles) to R.drawable.binglaterra,
-        context.getString(R.string.txtFrances) to R.drawable.bfrancia
-    )
-    var icon by remember { mutableStateOf(Icons.Default.KeyboardArrowDown) }
-    var showPanel by rememberSaveable { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Button(
-                onClick = {
-                    icon = Icons.Default.KeyboardArrowUp
-                    showPanel = true
-                },
-                modifier = Modifier.padding(8.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Blue
-                )
-            ) {
-                Image(
-                    painter = painterResource(id = items[selectedItem].second),
-                    contentDescription = "",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
-
-    if (showPanel) {
-        AlertDialog(
-            onDismissRequest = {
-                showPanel = false
-                icon = Icons.Default.KeyboardArrowDown
-            },
-            confirmButton = {},
-            text = {
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    items.forEachIndexed { index, (text, imageId) ->
-                        Spacer(modifier = Modifier.height(15.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    selectedItem = index
-                                    icon = Icons.Default.KeyboardArrowDown
-                                    if(items[selectedItem].first == "Ingles") {
-                                        idioma = "en"
-                                    }else{
-                                        if(items[selectedItem].first == "Frances") {
-                                            idioma = "fr"
-                                        }else{
-                                            idioma = "es"
-                                        }
-                                    }
-                                    showPanel = false
-                                }
-                        ) {
-                            Image(
-                                painter = painterResource(id = imageId),
-                                contentDescription = null,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = text)
-                            /*Spacer(modifier = Modifier.weight(1f))
-                            RadioButton(
-                                selected = selectedItem == index,
-                                onClick = {
-                                    selectedItem = index
-                                    icon = Icons.Default.KeyboardArrowDown
-                                    if(items[selectedItem].first == "Ingles") {
-                                        idioma = "en"
-                                    }else{
-                                        if(items[selectedItem].first == "Frances") {
-                                            idioma = "fr"
-                                        }else{
-                                            idioma = "es"
-                                        }
-                                    }
-                                    showPanel = false
-                                }
-                            )*/
-                        }
-                        Divider()
-                    }
-                }
-            },
-            containerColor = Color.DarkGray
-        )
-    }
-    callback(idioma)
-}
-
-//Metodo para cambiar el idioma de la app
-fun setLocale(context: Context, languageCode: String) {
-    val locale = Locale(languageCode)
-    Locale.setDefault(locale)
-    val configuration = Configuration(context.resources.configuration)
-    configuration.setLocale(locale)
-    context.resources.updateConfiguration(configuration, context.resources.displayMetrics)
-}
-
-@Composable
-fun ProvideUpdatedLocale(languageCode: String, content: @Composable () -> Unit) {
-    val context = LocalContext.current
-    val updatedContext = remember(languageCode) {
-        setLocale(context, languageCode)
-        context
-    }
-    CompositionLocalProvider(LocalContext provides updatedContext) {
-        content()
     }
 }

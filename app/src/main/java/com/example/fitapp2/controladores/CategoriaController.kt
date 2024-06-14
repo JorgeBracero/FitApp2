@@ -9,10 +9,11 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
+//CONTROLADOR PARA LAS CATEGORIAS
 class CategoriaController(db: FirebaseDatabase){
     private val refCategorias = db.getReference("categorias")
 
-    //Añade una nueva categoria, comprobando primero que no exista ya
+    //Añade una nueva categoria
     fun addCategoria(cat: Categoria){
         existeCategoria(cat, { existeCategoria ->
             if(!existeCategoria){ //Si no existe la añade
@@ -25,7 +26,7 @@ class CategoriaController(db: FirebaseDatabase){
         })
     }
 
-    //Si la categoria ya existe, no la añade
+    //Comprueba que una categoria exista o no
     private fun existeCategoria(cat: Categoria, callback: (Boolean) -> Unit){
         var existeCategoria = false
         refCategorias.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -54,7 +55,7 @@ class CategoriaController(db: FirebaseDatabase){
         })
     }
 
-    //Si la categoria ya existe, no la añade
+    //Devuelve una lista con todas las categorias de la BD
     fun getListaCategorias(callback: (MutableList<String>) -> Unit){
         val categorias = mutableListOf<String>()
         refCategorias.addValueEventListener(object : ValueEventListener {

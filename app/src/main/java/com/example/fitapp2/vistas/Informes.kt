@@ -191,7 +191,7 @@ fun InformesScreen(navController: NavController, alimentoController: AlimentoCon
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.fondo),
+                painter = painterResource(id = R.drawable.fondo3),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -547,7 +547,7 @@ fun CardInforme(
                             fontSize = TextUnit(17f,TextUnitType.Sp),
                             fontWeight = FontWeight.Bold
                         )
-                        Spacer(Modifier.width(220.dp))
+                        Spacer(Modifier.width(210.dp))
                         Text(
                             text = "${listaCaloriasMomentosDia[index]}",
                             fontSize = TextUnit(17f,TextUnitType.Sp),
@@ -684,7 +684,7 @@ fun CardInforme(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 5.dp, bottom = 5.dp),
+                                    .padding(7.dp),
                                 horizontalArrangement = Arrangement.SpaceAround
                             ) {
                                 Text(
@@ -692,7 +692,7 @@ fun CardInforme(
                                     fontSize = TextUnit(17f,TextUnitType.Sp),
                                     fontWeight = FontWeight.Bold
                                 )
-                                Spacer(Modifier.width(50.dp))
+                                Spacer(Modifier.width(20.dp))
                                 Text(
                                     text = "x$cantidad",
                                     fontSize = TextUnit(17f,TextUnitType.Sp),

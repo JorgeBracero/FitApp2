@@ -247,7 +247,7 @@ fun PrincipalScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.fondo),
+                painter = painterResource(id = R.drawable.fondo3),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -349,39 +349,35 @@ fun PrincipalScreen(
                             }
                         },
                         dismissButton = {
-                            Button(
-                                onClick = {
-                                    //Lo guarda en la Base de datos
-                                    showProducto = false //Cierra el dialog
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Gray,
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Text(
-                                    text = if (alimento == null) "Salir" else "Cancelar",
-                                    fontSize = TextUnit(13f, TextUnitType.Sp),
-                                    fontWeight = FontWeight.Bold
-                                )
+                            if(alimento != null) {
+                                Button(
+                                    onClick = {
+                                        //Lo guarda en la Base de datos
+                                        showProducto = false //Cierra el dialog
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Gray,
+                                        contentColor = Color.White
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Cancelar",
+                                        fontSize = TextUnit(13f, TextUnitType.Sp),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         },
                         title = {
-                            Text(
-                                text = if (alimento == null) "Error" else alimento!!.descAlimento,
-                                fontSize = TextUnit(23f, TextUnitType.Sp),
-                                fontWeight = FontWeight.ExtraBold
-                            )
-                        },
-                        text = {
-                            if (alimento == null) {
+                            if(alimento != null) {
                                 Text(
-                                    text = "No se ha encontrado el producto",
-                                    fontSize = TextUnit(15f, TextUnitType.Sp),
-                                    fontWeight = FontWeight.Bold
+                                    text = alimento!!.descAlimento,
+                                    fontSize = TextUnit(23f, TextUnitType.Sp),
+                                    fontWeight = FontWeight.ExtraBold
                                 )
                             }
-
+                        },
+                        text = {
                             if (alimento != null) {
                                 OutlinedTextField(
                                     label = { Text(

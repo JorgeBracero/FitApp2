@@ -1,16 +1,7 @@
 package com.example.fitapp2.apiService
 
-import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.AlimentoResponse
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
 import okhttp3.ResponseBody
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET

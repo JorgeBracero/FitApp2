@@ -10,9 +10,11 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlin.math.roundToInt
 
+//CONTROLADOR REGALIMENTOS
 class RegAlimentoController(db: FirebaseDatabase){
     private val refRegAl = db.getReference("regAlimentos")
 
+    //Añade un nuevo registro de alimento
     fun addRegAlimento(regAlimento: RegAlimento){
         generarKey(refRegAl,{ key ->
             if(key != null) {
@@ -21,7 +23,16 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
-    //Obtener la key de un alimento concreto de un usuario especifico
+    //Borra un registro de alimento
+    fun deleteRegAlimento(alimento: Alimento, email: String){
+        obtenerKeyAlimento(alimento,email, { key ->
+            if(key != null) {
+                refRegAl.child(key).removeValue()
+            }
+        })
+    }
+
+    //Obtener la clave de un alimento concreto de un usuario especifico
     private fun obtenerKeyAlimento(alimento: Alimento, emailUser: String, callback: (String?) -> Unit) {
         //Parte de una consulta de un alimento especifico a buscar, ya solo itero sobre los usuarios
         val query = refRegAl.orderByChild("idAlimento").equalTo(alimento.idAlimento)
@@ -389,14 +400,7 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
-    fun deleteRegAlimento(alimento: Alimento, email: String){
-        obtenerKeyAlimento(alimento,email, { key ->
-            if(key != null) {
-                refRegAl.child(key).removeValue()
-            }
-        })
-    }
-
+    //Actualiza la cantidad de un alimento de un usuario en la BD
     fun actualizarCantidadBD(alimento: Alimento, email: String, cantidad: Int){
         obtenerKeyAlimento(alimento,email, {key ->
             if(key != null) {
@@ -412,6 +416,7 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
+    //Actualiza el momento del dia de un alimento de un usuario en la BD
     fun actualizarMomentoDiaBD(alimento: Alimento, email: String, momentoDia: String){
         obtenerKeyAlimento(alimento,email, {key ->
             if(key != null) {
@@ -427,6 +432,7 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
+    //Obtengo la cantidad de un alimento de un usuario en la BD
     fun obtenerCantidadAlimentoBD(alimento: Alimento, email: String, callback: (Int) -> Unit) {
         var cantidadBD = 1
         refRegAl.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -454,6 +460,7 @@ class RegAlimentoController(db: FirebaseDatabase){
         })
     }
 
+    //Devuelve la referencia a mi tabla 'regAlimentos'
     fun getRefRegAl(): DatabaseReference{
         return refRegAl
     }

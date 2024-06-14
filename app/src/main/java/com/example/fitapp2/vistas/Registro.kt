@@ -39,14 +39,13 @@ import com.example.fitapp2.metodos.Terminos
 fun RegistroScreen(navController: NavController, userController: UsuarioController){
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    var idiomaActual by remember { mutableStateOf("es") }
     var checkedTerminos by rememberSaveable { mutableStateOf(false) }
-    ProvideUpdatedLocale(idiomaActual,{
+
         Box(
             modifier = Modifier.fillMaxSize()
         ){
             Image(
-                painter = painterResource(id = R.drawable.fondo),
+                painter = painterResource(id = R.drawable.fondo3),
                 contentDescription = "Fondo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -70,9 +69,7 @@ fun RegistroScreen(navController: NavController, userController: UsuarioControll
 
                 //Cards
                 LoginCard(context, navController, userController, false,checkedTerminos)
-                Spacer(modifier = Modifier.height(10.dp))
-                //Tarjeta(txtInvitado, idInvitado, context, navController)
-                Spacer(modifier = Modifier.height(150.dp))
+                Spacer(modifier = Modifier.height(160.dp))
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -87,5 +84,4 @@ fun RegistroScreen(navController: NavController, userController: UsuarioControll
                 }
             }
         }
-    })
 }
