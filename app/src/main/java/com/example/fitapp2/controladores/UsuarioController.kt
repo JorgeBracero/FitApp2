@@ -1,6 +1,9 @@
 package com.example.fitapp2.controladores
 
 
+import com.example.fitapp2.modelos.Alimento
+import com.example.fitapp2.modelos.Categoria
+import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Usuario
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -29,6 +32,51 @@ class UsuarioController(db: FirebaseDatabase){
     //Añade o modifica un usuario a realtime database, a la tabla usuarios, con todos sus datos
     fun addOrUpdUsuario(user: Usuario){
         refUsuarios.child(user.uid).setValue(user)
+    }
+
+    //Obtener todos los usuarios de la BD
+    fun getListaUsuarios(uid: String, callback: (MutableList<Usuario>) -> Unit){
+        var usuarios = mutableListOf<Usuario>()
+        refUsuarios.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    //Existen usuarios
+                    snapshot.children.forEach { child ->
+                        val usuario = child.getValue(Usuario::class.java)
+                        //Añade todos los usuarios menos el usuario actual que este usando la app
+                        if (usuario != null && uid != usuario.uid) {
+                             usuarios.add(usuario)
+                        }
+                    }
+                }
+
+                //Llamamos al callback
+                callback(usuarios)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("Error al obtener los usuarios: $error")
+                callback(usuarios)
+            }
+        })
+    }
+
+    //Filtrar usuarios segun una busqueda
+    fun getUsuariosBuscados(uid: String,query: String, callback: (List<Usuario>) -> Unit) {
+        getListaUsuarios(uid) { usuariosTemp ->
+            // Asegúrate de que getListaUsuarios haya completado la recogida de usuarios
+            println("Usuarios recogidos correctamente $usuariosTemp")
+
+            // Filtrar los usuarios según la búsqueda dada
+            val usuarios = usuariosTemp.filter {
+                it.nombreUsuario.toLowerCase().startsWith(query.toLowerCase())
+            }
+
+            println("Nuevos Usuarios: $usuarios")
+
+            // Devolver la lista de usuarios filtrada
+            callback(usuarios)
+        }
     }
 
     //Obtener los datos personales de un usuario

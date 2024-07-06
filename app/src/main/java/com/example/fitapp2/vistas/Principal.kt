@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -71,6 +72,7 @@ import com.example.fitapp2.metodos.isConnectedToNetwork
 import com.example.fitapp2.modelos.Alimento
 import com.example.fitapp2.modelos.RegAlimento
 import com.example.fitapp2.modelos.Rutas
+import com.example.fitapp2.modelos.Usuario
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -96,6 +98,8 @@ fun PrincipalScreen(
 ){
     val context = LocalContext.current
     val conexion = isConnectedToNetwork(context)
+    val uidActual = userController.getAuth().currentUser!!.uid
+    var usuarioActual by remember { mutableStateOf<Usuario?>(null) }
     val email = userController.getAuth().currentUser!!.email
     var qrResult by remember { mutableStateOf<String?>(null) }
     var alimento by remember { mutableStateOf<Alimento?>(null) }
@@ -109,6 +113,11 @@ fun PrincipalScreen(
             qrResult = result.contents
             println("QR: $qrResult")
         }
+    })
+
+    //Obtenemos los datos del usuario actual
+    userController.obtenerDatosUsuario(uidActual,{
+        usuarioActual = it
     })
 
     // Variable para almacenar el Job de la coroutine que llama a la API
@@ -128,344 +137,388 @@ fun PrincipalScreen(
     options.setBarcodeImageEnabled(true) //Para que pueda escanear codigos de barras
     options.setDesiredBarcodeFormats(ScanOptions.PRODUCT_CODE_TYPES) // Solo escanear códigos de barras de productos
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = context.getString(R.string.txtPrincipal),
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = TextUnit(23f, TextUnitType.Sp)
-                    )
-                },
-                colors = TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = Color.Black,
-                    titleContentColor = Color.White
-                )
-            )
-        },
-        bottomBar = {
-            BottomAppBar(
-                content = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ){
-                        Column(verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally){
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Perfil",
-                                tint = Color.White,
-                                modifier = Modifier
-                                    .size(45.dp)
-                                    .clickable {
-                                        //Navega al perfil del usuario
-                                        navController.navigate(route = Rutas.PerfilScreen.ruta)
-                                    }
-                            )
-                            Text(
-                                text = context.getString(R.string.txtPerfil),
-                                fontWeight = FontWeight.ExtraBold
-                            )
-                        }
-
-                        Column(verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally){
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = "Inicio",
-                                tint = Color.Cyan,
-                                modifier = Modifier.size(45.dp)
-                            )
-                            Text(
-                                text = "Inicio",
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.Cyan
-                            )
-                        }
-
-                        Column(verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally){
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "Informes",
-                                tint = Color.White,
-                                modifier = Modifier
-                                    .size(45.dp)
-                                    .clickable {
-                                        navController.navigate(Rutas.InformesScreen.ruta)
-                                    }
-
-                                //Navega a Informes
-                            )
-                            Text(
-                                text = context.getString(R.string.txtInformes),
-                                fontWeight = FontWeight.ExtraBold
-                            )
-                        }
-                    }
-                },
-                containerColor = Color.Black,
-                contentColor = Color.White
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                modifier = Modifier.size(50.dp),
-                shape = CircleShape,
-                containerColor = Color(0xFF33B2A8),
-                onClick = {
-                    println(conexion)
-                    if(conexion) {
-                        //Mostramos el scanner qr, siempre que tenga conexion
-                        scanLauncher.launch(options)
-                    }else{
-                        Toast.makeText(context,"Esta accion requiere conexion a Internet",Toast.LENGTH_SHORT).show()
-                    }
-                }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .background(Color.White)
-                        .size(32.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.baseline_qr_code_2_24),
-                        contentDescription = "Escaner qr",
-                        tint = Color.Black,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        },
-        floatingActionButtonPosition = FabPosition.End
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.fondo3),
-                contentDescription = "Fondo",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Seleccione un momento del dia, para añadir, eliminar o buscar alimentos",
-                        fontSize = TextUnit(18f, TextUnitType.Sp),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Spacer(Modifier.height(40.dp))
-                TarjetaDia(
-                    context.getString(R.string.txtDesayuno),
-                    R.drawable.desayuno,
-                    navController
-                )
-                TarjetaDia(
-                    context.getString(R.string.txtAlmuerzo),
-                    R.drawable.almuerzo,
-                    navController
-                )
-                TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena, navController)
-
-                //Si encuentra un codigo de barras, procedemos a validarlo
-                //Una vez tenemos el codigo de barras, buscamos el producto en la api
-                //Si el producto existe en la Api, le solicitamos al usuario si desea guardarlo
-                //Si lo desea guardar se almacena en la base de datos
-                //En caso contrario, indicamos que no existe y se acaba el proceso
-                LaunchedEffect(qrResult) {
-                    if (qrResult != null) {
-                        job?.cancel() // Cancelar cualquier coroutine anterior
-                        job = coroutineScope.launch(coroutineExceptionHandler) {
-                            try {
-                                val alimentoResult =
-                                    buscarProductoApi(qrResult!!).await() // Espera a que se complete el Deferred
-                                alimento = alimentoResult //y obtiene el resultado
-                                println("Alimento recogido: $alimento")
-                                showProducto = true
-                            } catch (e: Exception) {
-                                errorMessage = e.message
-                                Toast.makeText(
-                                    context,
-                                    "El producto no se encuentra en la Api",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+    if(usuarioActual != null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = context.getString(R.string.txtPrincipal),
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = TextUnit(23f, TextUnitType.Sp)
+                        )
+                    },
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        containerColor = Color.Black,
+                        titleContentColor = Color.White
+                    ),
+                    actions = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "",
+                            tint = Color.White,
+                            modifier = Modifier.clickable {
+                                //Navega a la pantalla para buscar usuarios
+                                navController.navigate(Rutas.BuscarUsuariosScreen.ruta)
                             }
-                        }
+                        )
                     }
-                }
-
-
-                if (showProducto) {
-                    AlertDialog(
-                        onDismissRequest = { showProducto = false },
-                        confirmButton = {
-                            if (alimento != null) {
-                                Button(
-                                    onClick = {
-                                        //Lo guarda en la Base de datos
-                                        //Si el alimento cumple todos estos requisitos, se puede guardar
-                                        if (alimento!!.catsAlimento.isNotEmpty() && alimento!!.imgAlimento.isNotEmpty()
-                                            && alimento!!.ingredientes[0].idIng.isNotEmpty()
-                                            && (alimento!!.nutrientes.calorias != 0.0
-                                                    && !alimento!!.descAlimento.toLowerCase()
-                                                .contains("agua"))
-                                        ) {
-                                            //El agua es el unico alimento que no tiene calorias
-                                            guardarProducto = true //En este caso se puede guardar
-                                        } else { //En caso contrario
-                                            Toast.makeText(
-                                                context,
-                                                "El alimento esta incompleto",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                        showProducto = false //Cierra el dialog
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.Cyan,
-                                        contentColor = Color.White
-                                    )
-                                ) {
-                                    Text(
-                                        text = "Guardar",
-                                        fontSize = TextUnit(13f, TextUnitType.Sp),
-                                        fontWeight = FontWeight.Bold
-                                    )
+                )
+            },
+            bottomBar = {
+                BottomAppBar(
+                    content = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceAround
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.clickable {
+                                    navController.navigate(Rutas.PerfilScreen.ruta)
                                 }
-                            }
-                        },
-                        dismissButton = {
-                            if(alimento != null) {
-                                Button(
-                                    onClick = {
-                                        //Lo guarda en la Base de datos
-                                        showProducto = false //Cierra el dialog
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.Gray,
-                                        contentColor = Color.White
-                                    )
-                                ) {
-                                    Text(
-                                        text = "Cancelar",
-                                        fontSize = TextUnit(13f, TextUnitType.Sp),
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        },
-                        title = {
-                            if(alimento != null) {
+                            ) {
+                                storeController.mostrarImagen(
+                                    context = context,
+                                    img = usuarioActual!!.fotoPerfil,
+                                    size = 45.dp
+                                )
                                 Text(
-                                    text = alimento!!.descAlimento,
-                                    fontSize = TextUnit(23f, TextUnitType.Sp),
+                                    text = context.getString(R.string.txtPerfil),
                                     fontWeight = FontWeight.ExtraBold
                                 )
                             }
-                        },
-                        text = {
-                            if (alimento != null) {
-                                OutlinedTextField(
-                                    label = { Text(
-                                        text = "Elige el momento del dia en el cual lo quieres guardar:",
-                                        fontSize = TextUnit(14f, TextUnitType.Sp),
-                                        fontWeight = FontWeight.Bold
-                                    ) },
-                                    value = momentoDia,
-                                    onValueChange = {},
-                                    trailingIcon = {
-                                        Icon(
-                                            imageVector = icon,
-                                            contentDescription = "",
-                                            tint = Color.White,
-                                            modifier = Modifier.clickable {
-                                                //Abre el dialogo
-                                                icon = Icons.Default.KeyboardArrowUp
-                                                elegirMomentoDia = true
-                                            }
-                                        )
-                                    },
-                                    readOnly = true
-                                )
-                            }
-                        },
-                        containerColor = Color.DarkGray
-                    )
-                }
 
-                if (elegirMomentoDia) {
-                    var selectedItem by remember { mutableStateOf(0) }
-                    val items: List<String> = listOf("Desayuno", "Almuerzo", "Cena")
-                    AlertDialog(
-                        onDismissRequest = { elegirMomentoDia = false },
-                        confirmButton = {},
-                        text = {
                             Column(
-                                modifier = Modifier.padding(8.dp),
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                items.forEach { item ->
-                                    Spacer(modifier = Modifier.height(15.dp))
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                selectedItem = items.indexOf(item)
-                                                icon = Icons.Default.KeyboardArrowDown
-                                                momentoDia = items[selectedItem]
-                                                elegirMomentoDia = false
+                                Icon(
+                                    imageVector = Icons.Default.Home,
+                                    contentDescription = "Inicio",
+                                    tint = Color.Cyan,
+                                    modifier = Modifier.size(45.dp)
+                                )
+                                Text(
+                                    text = "Inicio",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.Cyan
+                                )
+                            }
+
+                            Column(
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "Informes",
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .size(45.dp)
+                                        .clickable {
+                                            navController.navigate(Rutas.InformesScreen.ruta)
+                                        }
+
+                                    //Navega a Informes
+                                )
+                                Text(
+                                    text = context.getString(R.string.txtInformes),
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
+
+                            //Para ver mis conversaciones con otros usuarios
+                            Column(
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_chat_24),
+                                    contentDescription = "Mis chats",
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .size(45.dp)
+                                        .clickable {
+                                            //navController.navigate(Rutas.InformesScreen.ruta)
+                                        }
+                                )
+                                Text(
+                                    text = "Chat",
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
+                        }
+                    },
+                    containerColor = Color.Black,
+                    contentColor = Color.White
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    modifier = Modifier.size(50.dp),
+                    shape = CircleShape,
+                    containerColor = Color(0xFF33B2A8),
+                    onClick = {
+                        println(conexion)
+                        if (conexion) {
+                            //Mostramos el scanner qr, siempre que tenga conexion
+                            scanLauncher.launch(options)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Esta accion requiere conexion a Internet",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(Color.White)
+                            .size(32.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.baseline_qr_code_2_24),
+                            contentDescription = "Escaner qr",
+                            tint = Color.Black,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            },
+            floatingActionButtonPosition = FabPosition.End
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.fondo3),
+                    contentDescription = "Fondo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                Column(
+                    modifier = Modifier
+                        .padding(innerPadding),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Seleccione un momento del dia, para añadir, eliminar o buscar alimentos",
+                            fontSize = TextUnit(18f, TextUnitType.Sp),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(Modifier.height(40.dp))
+                    TarjetaDia(
+                        context.getString(R.string.txtDesayuno),
+                        R.drawable.desayuno,
+                        navController
+                    )
+                    TarjetaDia(
+                        context.getString(R.string.txtAlmuerzo),
+                        R.drawable.almuerzo,
+                        navController
+                    )
+                    TarjetaDia(context.getString(R.string.txtCena), R.drawable.cena, navController)
+
+                    //Si encuentra un codigo de barras, procedemos a validarlo
+                    //Una vez tenemos el codigo de barras, buscamos el producto en la api
+                    //Si el producto existe en la Api, le solicitamos al usuario si desea guardarlo
+                    //Si lo desea guardar se almacena en la base de datos
+                    //En caso contrario, indicamos que no existe y se acaba el proceso
+                    LaunchedEffect(qrResult) {
+                        if (qrResult != null) {
+                            job?.cancel() // Cancelar cualquier coroutine anterior
+                            job = coroutineScope.launch(coroutineExceptionHandler) {
+                                try {
+                                    val alimentoResult =
+                                        buscarProductoApi(qrResult!!).await() // Espera a que se complete el Deferred
+                                    alimento = alimentoResult //y obtiene el resultado
+                                    println("Alimento recogido: $alimento")
+                                    showProducto = true
+                                } catch (e: Exception) {
+                                    errorMessage = e.message
+                                    Toast.makeText(
+                                        context,
+                                        "El producto no se encuentra en la Api",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }
+                    }
+
+
+                    if (showProducto) {
+                        AlertDialog(
+                            onDismissRequest = { showProducto = false },
+                            confirmButton = {
+                                if (alimento != null) {
+                                    Button(
+                                        onClick = {
+                                            //Lo guarda en la Base de datos
+                                            //Si el alimento cumple todos estos requisitos, se puede guardar
+                                            if (alimento!!.catsAlimento.isNotEmpty() && alimento!!.imgAlimento.isNotEmpty()
+                                                && alimento!!.ingredientes[0].idIng.isNotEmpty()
+                                                && (alimento!!.nutrientes.calorias != 0.0
+                                                        && !alimento!!.descAlimento.toLowerCase()
+                                                    .contains("agua"))
+                                            ) {
+                                                //El agua es el unico alimento que no tiene calorias
+                                                guardarProducto =
+                                                    true //En este caso se puede guardar
+                                            } else { //En caso contrario
+                                                Toast.makeText(
+                                                    context,
+                                                    "El alimento esta incompleto",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             }
+                                            showProducto = false //Cierra el dialog
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color.Cyan,
+                                            contentColor = Color.White
+                                        )
                                     ) {
                                         Text(
-                                            text = item,
-                                            fontSize = TextUnit(18f, TextUnitType.Sp),
+                                            text = "Guardar",
+                                            fontSize = TextUnit(13f, TextUnitType.Sp),
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
-                                    Divider()
                                 }
-                            }
-                        },
-                        containerColor = Color.DarkGray
-                    )
-                }
+                            },
+                            dismissButton = {
+                                if (alimento != null) {
+                                    Button(
+                                        onClick = {
+                                            //Lo guarda en la Base de datos
+                                            showProducto = false //Cierra el dialog
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color.Gray,
+                                            contentColor = Color.White
+                                        )
+                                    ) {
+                                        Text(
+                                            text = "Cancelar",
+                                            fontSize = TextUnit(13f, TextUnitType.Sp),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            },
+                            title = {
+                                if (alimento != null) {
+                                    Text(
+                                        text = alimento!!.descAlimento,
+                                        fontSize = TextUnit(23f, TextUnitType.Sp),
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                }
+                            },
+                            text = {
+                                if (alimento != null) {
+                                    OutlinedTextField(
+                                        label = {
+                                            Text(
+                                                text = "Elige el momento del dia en el cual lo quieres guardar:",
+                                                fontSize = TextUnit(14f, TextUnitType.Sp),
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        },
+                                        value = momentoDia,
+                                        onValueChange = {},
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = icon,
+                                                contentDescription = "",
+                                                tint = Color.White,
+                                                modifier = Modifier.clickable {
+                                                    //Abre el dialogo
+                                                    icon = Icons.Default.KeyboardArrowUp
+                                                    elegirMomentoDia = true
+                                                }
+                                            )
+                                        },
+                                        readOnly = true
+                                    )
+                                }
+                            },
+                            containerColor = Color.DarkGray
+                        )
+                    }
 
-                if (guardarProducto) {
-                    storeController.subirImagen(alimento!!, alimentoController, catController)
+                    if (elegirMomentoDia) {
+                        var selectedItem by remember { mutableStateOf(0) }
+                        val items: List<String> = listOf("Desayuno", "Almuerzo", "Cena")
+                        AlertDialog(
+                            onDismissRequest = { elegirMomentoDia = false },
+                            confirmButton = {},
+                            text = {
+                                Column(
+                                    modifier = Modifier.padding(8.dp),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    items.forEach { item ->
+                                        Spacer(modifier = Modifier.height(15.dp))
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    selectedItem = items.indexOf(item)
+                                                    icon = Icons.Default.KeyboardArrowDown
+                                                    momentoDia = items[selectedItem]
+                                                    elegirMomentoDia = false
+                                                }
+                                        ) {
+                                            Text(
+                                                text = item,
+                                                fontSize = TextUnit(18f, TextUnitType.Sp),
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        Divider()
+                                    }
+                                }
+                            },
+                            containerColor = Color.DarkGray
+                        )
+                    }
 
-                    //Por ultimo subo el registro de ese alimento, compruebo que ya no tenga uno para ese mismo usuario
-                    val regAlimento = RegAlimento(
-                        idAlimento = alimento!!.idAlimento,
-                        email = email!!,
-                        momentoDia = momentoDia,
-                        cantidad = 1
-                    )
-                    println(regAlimento)
-                    regAlimentoController.alimentoConsumidoUsuario(
-                        alimento!!,
-                        email,
-                        { alimentoConsumido ->
-                            if (!alimentoConsumido) { //Si el alimento no ha sido consumido por el usuario, lo añadimos
-                                regAlimentoController.addRegAlimento(regAlimento)
-                                println("Añadido correctamente")
-                            }
-                        })
+                    if (guardarProducto) {
+                        storeController.subirImagen(alimento!!, alimentoController, catController)
+
+                        //Por ultimo subo el registro de ese alimento, compruebo que ya no tenga uno para ese mismo usuario
+                        val regAlimento = RegAlimento(
+                            idAlimento = alimento!!.idAlimento,
+                            email = email!!,
+                            momentoDia = momentoDia,
+                            cantidad = 1
+                        )
+                        println(regAlimento)
+                        regAlimentoController.alimentoConsumidoUsuario(
+                            alimento!!,
+                            email,
+                            { alimentoConsumido ->
+                                if (!alimentoConsumido) { //Si el alimento no ha sido consumido por el usuario, lo añadimos
+                                    regAlimentoController.addRegAlimento(regAlimento)
+                                    println("Añadido correctamente")
+                                }
+                            })
+                    }
                 }
             }
         }

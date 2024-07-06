@@ -13,6 +13,8 @@ import com.example.fitapp2.controladores.StorageController
 import com.example.fitapp2.controladores.UsuarioController
 import com.example.fitapp2.vistas.AlimentosConsumidosScreen
 import com.example.fitapp2.vistas.BuscarScreen
+import com.example.fitapp2.vistas.BuscarUsuariosScreen
+import com.example.fitapp2.vistas.ChatScreen
 import com.example.fitapp2.vistas.DetallesScreen
 import com.example.fitapp2.vistas.InfoPersonalScreen
 import com.example.fitapp2.vistas.InformesScreen
@@ -145,7 +147,24 @@ fun Navigation(
 
         //INFORMES
         composable(route = Rutas.InformesScreen.ruta){
-            InformesScreen(navController,alimentoController,regAlimentoController,userController)
+            InformesScreen(navController,alimentoController,regAlimentoController,userController,storeController)
+        }
+
+        //BUSCAR USUARIOS
+        composable(route = Rutas.BuscarUsuariosScreen.ruta){
+            BuscarUsuariosScreen(navController,userController,storeController)
+        }
+
+        //CHAT
+        composable(route = Rutas.ChatScreen.ruta + "/{uid}",
+            arguments = listOf(
+                navArgument(name = "uid"){
+                    type = NavType.StringType
+                }
+            )
+        ){
+            val uid = it.arguments?.getString("uid")
+            ChatScreen(navController, uid!!,userController,storeController)
         }
     }
 }

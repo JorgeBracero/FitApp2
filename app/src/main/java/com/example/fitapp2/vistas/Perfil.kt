@@ -150,18 +150,18 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceAround
                         ){
-                            Column(verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally){
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = "Perfil",
-                                    tint = Color.Cyan,
-                                    modifier = Modifier.size(45.dp)
+                            Column(
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                storeController.mostrarImagen(
+                                    context = context,
+                                    img = usuarioActual!!.fotoPerfil,
+                                    size = 45.dp
                                 )
                                 Text(
                                     text = context.getString(R.string.txtPerfil),
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.Cyan
+                                    fontWeight = FontWeight.ExtraBold
                                 )
                             }
 
@@ -197,6 +197,27 @@ fun PerfilScreen(navController: NavController, userController: UsuarioController
                                 )
                                 Text(
                                     text = context.getString(R.string.txtInformes),
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
+
+                            //Para ver mis conversaciones con otros usuarios
+                            Column(
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_chat_24),
+                                    contentDescription = "Mis chats",
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .size(45.dp)
+                                        .clickable {
+                                            //navController.navigate(Rutas.InformesScreen.ruta)
+                                        }
+                                )
+                                Text(
+                                    text = "Chat",
                                     fontWeight = FontWeight.ExtraBold
                                 )
                             }

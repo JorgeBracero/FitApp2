@@ -8,8 +8,9 @@ data class Usuario(
     val altura: Float,
     val sexo: String,
     val edad: Int,
-    val fotoPerfil: String
+    val fotoPerfil: String,
+    val chats: List<Chat>
 ){
     // Constructor sin argumentos requerido por Firebase Realtime Database
-    constructor() : this("", "",  "", 40f, 1.5f, "H",1,"")
+    constructor() : this("", "",  "", 40f, 1.5f, "H",1,"", emptyList())
 }

@@ -399,7 +399,8 @@ fun LoginCard(
                                                 alturaUser,
                                                 txtSexo,
                                                 edadUser,
-                                                "Predeterminada"
+                                                "Predeterminada",
+                                                emptyList()
                                             )
 
                                             println("Altura: $alturaUser")

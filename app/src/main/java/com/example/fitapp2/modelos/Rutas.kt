@@ -12,4 +12,6 @@ sealed class Rutas(val ruta: String) {
     object PasswordScreen: Rutas("PasswordScreen")
     object InformesScreen: Rutas("InformesScreen")
     object RegistroScreen: Rutas("RegistroScreen")
+    object BuscarUsuariosScreen: Rutas("BuscarUsuariosScreen")
+    object ChatScreen: Rutas("ChatScreen")
 }

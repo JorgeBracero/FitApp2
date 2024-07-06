@@ -185,7 +185,8 @@ fun InfoPersonalScreen(navController: NavController, userController: UsuarioCont
                                         nuevaAltura,
                                         sexoUser,
                                         nuevaEdad,
-                                        usuarioActual!!.fotoPerfil
+                                        usuarioActual!!.fotoPerfil,
+                                        emptyList()
                                     )
                                     userController.addOrUpdUsuario(usuarioMod) //Actualiza ese mismo usuario
                                     Toast.makeText(
